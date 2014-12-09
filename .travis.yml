@@ -10,7 +10,7 @@ env:
     - secure: "hnwACXYhD0drSAk2McPyQZ9PmltFEl3m/dPuPbyx1jdC4ly7tbbeRGzomoR5wh/uiH4RaILOdl7h1PbNNPTDYQCYbXJbO1Q1jHGZpOHAna+jHzyCO9fOJLoU/0zcz/ZcJRw1kfcyjNtVYxl3Cd4XIBmPQOqYHxehRlFwfvadYpk="
 
 before_install:
-  - git submodule update --init --recursive
+  - pip install pyyaml
 
 before_script:
   - python etc/travis-sonatype.py
