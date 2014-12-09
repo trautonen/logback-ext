@@ -7,7 +7,7 @@
   <parent>
     <artifactId>eluder-parent</artifactId>
     <groupId>org.eluder</groupId>
-    <version>6-SNAPSHOT</version>
+    <version>6</version>
     <relativePath></relativePath>
   </parent>
 
@@ -16,6 +16,31 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <name>logback-ext</name>
+  <description>Extensions for Logback logging library.</description>
+  <url>https://github.com/trautonen/logback-ext</url>
+  <inceptionYear>2014</inceptionYear>
+
+  <developers>
+    <developer>
+      <name>Tapio Rautonen</name>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>The MIT License (MIT)</name>
+      <url>http://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://github.com/trautonen/logback-ext.git</connection>
+    <developerConnection>scm:git:git://github.com/trautonen/logback-ext.git</developerConnection>
+    <url>https://github.com/trautonen/logback-ext</url>
+  </scm>
+  
   <modules>
     <module>logback-ext-core</module>
     <module>logback-ext-jackson</module>
