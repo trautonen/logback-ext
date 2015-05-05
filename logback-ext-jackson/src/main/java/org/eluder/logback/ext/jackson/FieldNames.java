@@ -13,10 +13,10 @@ public class FieldNames {
     private String formattedMessage = "formattedMessage";
     private String stackTrace       = "stackTrace";
     private String callerData       = "caller";
-    private String callerClass        = "class";
-    private String callerMethod       = "method";
-    private String callerFile         = "file";
-    private String callerLine         = "line";
+    private String callerClass          = "class";
+    private String callerMethod         = "method";
+    private String callerFile           = "file";
+    private String callerLine           = "line";
     private String mdc              = "mdc";
     private String marker           = "marker";
 
