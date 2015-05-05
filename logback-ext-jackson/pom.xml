@@ -13,10 +13,6 @@
   <artifactId>logback-ext-jackson</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <properties>
-    <jackson.version>2.5.3</jackson.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>ch.qos.logback</groupId>

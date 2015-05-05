@@ -4,13 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>logback-ext</artifactId>
     <groupId>org.eluder.logback</groupId>
+    <artifactId>logback-ext</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>logback-ext-sqs-appender</artifactId>
+  <artifactId>logback-ext-aws-core</artifactId>
   <version>1.0-SNAPSHOT</version>
+
+  <properties>
+    <aws.version>1.9.33</aws.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -20,9 +24,10 @@
     </dependency>
     <dependency>
       <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sqs</artifactId>
+      <artifactId>aws-java-sdk-core</artifactId>
       <version>${aws.version}</version>
     </dependency>
   </dependencies>
+
 
 </project>

@@ -40,11 +40,19 @@
     <developerConnection>scm:git:git://github.com/trautonen/logback-ext.git</developerConnection>
     <url>https://github.com/trautonen/logback-ext</url>
   </scm>
-  
+
+  <properties>
+    <guava.version>18.0</guava.version>
+    <jackson.version>2.5.3</jackson.version>
+    <aws.version>1.9.33</aws.version>
+  </properties>
+
   <modules>
     <module>logback-ext-core</module>
     <module>logback-ext-jackson</module>
+    <module>logback-ext-aws-core</module>
     <module>logback-ext-sqs-appender</module>
+    <module>logback-ext-sns-appender</module>
   </modules>
 
 
