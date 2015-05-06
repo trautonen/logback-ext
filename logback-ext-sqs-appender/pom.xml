@@ -10,7 +10,6 @@
   </parent>
 
   <artifactId>logback-ext-sqs-appender</artifactId>
-  <version>1.0-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
