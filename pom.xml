@@ -55,5 +55,34 @@
     <module>logback-ext-sns-appender</module>
   </modules>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-jackson</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-aws-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-sqs-appender</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-sns-appender</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
 </project>
