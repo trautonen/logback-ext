@@ -100,7 +100,7 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
             executor.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            addWarn(format("SQS executor shutdown interrupted for appender '%s'", getName()), ex);
+            addWarn(format("Thread executor shutdown interrupted for appender '%s'", getName()), ex);
         }
     }
 
