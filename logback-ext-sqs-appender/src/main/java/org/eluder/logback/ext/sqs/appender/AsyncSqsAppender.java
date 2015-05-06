@@ -1,11 +1,11 @@
 package org.eluder.logback.ext.sqs.appender;
 
-import java.nio.charset.Charset;
-
 import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.encoder.Encoder;
+
+import java.nio.charset.Charset;
 
 public class AsyncSqsAppender extends AsyncAppender {
     
@@ -25,12 +25,12 @@ public class AsyncSqsAppender extends AsyncAppender {
         appender.setSecretKey(secretKey);
     }
 
-    public void setQueueUrl(String queueUrl) {
-        appender.setQueueUrl(queueUrl);
+    public void setMaxPayloadSize(int maxPayloadSize) {
+        appender.setMaxPayloadSize(maxPayloadSize);
     }
 
-    public void setMaxMessageSize(int maxMessageSize) {
-        appender.setMaxMessageSize(maxMessageSize);
+    public void setQueueUrl(String queueUrl) {
+        appender.setQueueUrl(queueUrl);
     }
 
     public void setCharset(Charset charset) {
