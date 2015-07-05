@@ -6,6 +6,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.core.ContextAwareExecutorService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,14 +34,19 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
 
     @Override
     protected void doInit() {
-        sqs = new AmazonSQSAsyncClient(getCredentials(), getContext().getExecutorService());
+        sqs = new AmazonSQSAsyncClient(getCredentials(), new ContextAwareExecutorService(this)) {
+            @Override
+            public void shutdown() {
+                // we don't want to shutdown the logback managed executorservice
+                client.shutdown();
+            }
+        };
         sqs.setEndpoint(getEndpoint());
     }
 
     @Override
     protected void doClose() {
         if (sqs != null) {
-            shutdownExecutor(sqs.getExecutorService());
             sqs.shutdown();
             sqs = null;
         }

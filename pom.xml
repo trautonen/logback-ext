@@ -7,7 +7,7 @@
   <parent>
     <artifactId>eluder-parent</artifactId>
     <groupId>org.eluder</groupId>
-    <version>6</version>
+    <version>7</version>
     <relativePath></relativePath>
   </parent>
 
@@ -43,8 +43,8 @@
 
   <properties>
     <guava.version>18.0</guava.version>
-    <jackson.version>2.5.3</jackson.version>
-    <aws.version>1.9.33</aws.version>
+    <jackson.version>2.5.4</jackson.version>
+    <aws.version>1.10.2</aws.version>
   </properties>
 
   <modules>
@@ -53,6 +53,7 @@
     <module>logback-ext-aws-core</module>
     <module>logback-ext-sqs-appender</module>
     <module>logback-ext-sns-appender</module>
+    <module>integration-tests</module>
   </modules>
 
   <dependencyManagement>

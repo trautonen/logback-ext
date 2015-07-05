@@ -11,8 +11,6 @@ import com.amazonaws.internal.StaticCredentialsProvider;
 import org.eluder.logback.ext.core.EncodingStringAppender;
 
 import java.io.Closeable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -90,17 +88,6 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
             return null;
         } else {
             return converted;
-        }
-    }
-
-
-    protected void shutdownExecutor(ExecutorService executor) {
-        try {
-            executor.shutdown();
-            executor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            addWarn(format("Thread executor shutdown interrupted for appender '%s'", getName()), ex);
         }
     }
 

@@ -7,6 +7,7 @@ import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.core.ContextAwareExecutorService;
 
 import static java.lang.String.format;
 
@@ -32,14 +33,19 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
 
     @Override
     protected void doInit() {
-        sns = new AmazonSNSAsyncClient(getCredentials(), getContext().getExecutorService());
+        sns = new AmazonSNSAsyncClient(getCredentials(), new ContextAwareExecutorService(this)) {
+            @Override
+            public void shutdown() {
+                // we don't want to shutdown the logback managed executorservice
+                client.shutdown();
+            }
+        };
         sns.setRegion(RegionUtils.getRegion(region));
     }
 
     @Override
     protected void doClose() {
         if (sns != null) {
-            shutdownExecutor(sns.getExecutorService());
             sns.shutdown();
             sns = null;
         }
