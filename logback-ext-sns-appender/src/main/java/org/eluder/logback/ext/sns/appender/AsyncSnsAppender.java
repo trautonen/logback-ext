@@ -2,6 +2,7 @@ package org.eluder.logback.ext.sns.appender;
 
 import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Context;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.encoder.Encoder;
 
@@ -54,6 +55,12 @@ public class AsyncSnsAppender extends AsyncAppender {
 
     public void setBinary(boolean binary) {
         appender.setBinary(binary);
+    }
+
+    @Override
+    public void setContext(Context context) {
+        appender.setContext(context);
+        super.setContext(context);
     }
 
     @Override
