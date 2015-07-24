@@ -1,5 +1,6 @@
 package org.eluder.logback.ext.aws.core;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
@@ -78,6 +79,10 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
                 new ProfileCredentialsProvider(),
                 new InstanceProfileCredentialsProvider()
         );
+    }
+
+    protected ClientConfiguration getClientConfiguration() {
+        return new ClientConfiguration();
     }
 
     @Override

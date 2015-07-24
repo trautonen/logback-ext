@@ -6,21 +6,32 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
-import org.eluder.logback.ext.core.ContextAwareExecutorService;
+import org.eluder.logback.ext.aws.core.AppenderExecutors;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
 public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent> {
 
     private String queueUrl;
+    private int threadPoolSize = AppenderExecutors.DEFAULT_THREAD_POOL_SIZE;
+    private int maxFlushTime = AppenderExecutors.DEFAULT_MAX_FLUSH_TIME;
 
     private AmazonSQSAsyncClient sqs;
 
     public final void setQueueUrl(String queueUrl) {
         this.queueUrl = queueUrl;
+    }
+
+    public final void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
+    public final void setMaxFlushTime(int maxFlushTime) {
+        this.maxFlushTime = maxFlushTime;
     }
 
     @Override
@@ -34,19 +45,18 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
 
     @Override
     protected void doInit() {
-        sqs = new AmazonSQSAsyncClient(getCredentials(), new ContextAwareExecutorService(this)) {
-            @Override
-            public void shutdown() {
-                // we don't want to shutdown the logback managed executorservice
-                client.shutdown();
-            }
-        };
+        sqs = new AmazonSQSAsyncClient(
+                getCredentials(),
+                getClientConfiguration(),
+                Executors.newFixedThreadPool(threadPoolSize)
+        );
         sqs.setEndpoint(getEndpoint());
     }
 
     @Override
     protected void doClose() {
         if (sqs != null) {
+            AppenderExecutors.shutdown(this, sqs.getExecutorService(), maxFlushTime);
             sqs.shutdown();
             sqs = null;
         }

@@ -7,7 +7,9 @@ import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
-import org.eluder.logback.ext.core.ContextAwareExecutorService;
+import org.eluder.logback.ext.aws.core.AppenderExecutors;
+
+import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
@@ -16,6 +18,8 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     private String region;
     private String topic;
     private String subject;
+    private int threadPoolSize = AppenderExecutors.DEFAULT_THREAD_POOL_SIZE;
+    private int maxFlushTime = AppenderExecutors.DEFAULT_MAX_FLUSH_TIME;
 
     private AmazonSNSAsyncClient sns;
 
@@ -31,21 +35,28 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
         this.subject = subject;
     }
 
+    public final void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
+    public final void setMaxFlushTime(int maxFlushTime) {
+        this.maxFlushTime = maxFlushTime;
+    }
+
     @Override
     protected void doInit() {
-        sns = new AmazonSNSAsyncClient(getCredentials(), new ContextAwareExecutorService(this)) {
-            @Override
-            public void shutdown() {
-                // we don't want to shutdown the logback managed executorservice
-                client.shutdown();
-            }
-        };
+        sns = new AmazonSNSAsyncClient(
+                getCredentials(),
+                getClientConfiguration(),
+                Executors.newFixedThreadPool(threadPoolSize)
+        );
         sns.setRegion(RegionUtils.getRegion(region));
     }
 
     @Override
     protected void doClose() {
         if (sns != null) {
+            AppenderExecutors.shutdown(this, sns.getExecutorService(), maxFlushTime);
             sns.shutdown();
             sns = null;
         }
