@@ -1,9 +1,5 @@
 package org.eluder.logback.ext.jackson;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayOutputStream;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -12,6 +8,10 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+
+import static org.junit.Assert.assertNotNull;
 
 public class JacksonEncoderTest {
 
@@ -33,7 +33,11 @@ public class JacksonEncoderTest {
     }
     
     @Test
-    public void encodeLoggingEvent() throws Exception{
+    public void encodeLoggingEvent() throws Exception {
+        FieldNames fn = new FieldNames();
+        fn.setLevel(FieldNames.IGNORE_NAME);
+        encoder.setFieldNames(fn);
+
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         encoder.init(stream);
         encoder.doEncode(createLoggingEvent("Hellö JSON!"));
@@ -42,6 +46,6 @@ public class JacksonEncoderTest {
     }
     
     private ILoggingEvent createLoggingEvent(String message) {
-        return new LoggingEvent("", logger, Level.DEBUG, message, null, null);
+        return new LoggingEvent("", logger, Level.DEBUG, message, new IllegalArgumentException("fobar"), null);
     }
 }
