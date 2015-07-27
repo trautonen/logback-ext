@@ -1,17 +1,35 @@
 package org.eluder.logback.ext.aws.core;
 
 import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.AsyncAppenderBase;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 
 public class AppenderExecutors {
 
     public static final int DEFAULT_THREAD_POOL_SIZE = 20;
-    public static final int DEFAULT_MAX_FLUSH_TIME = AsyncAppenderBase.DEFAULT_MAX_FLUSH_TIME; // milliseconds
+    public static final int DEFAULT_MAX_FLUSH_TIME = 3000; // milliseconds
+
+    public static ExecutorService newExecutor(Appender<?> appender, int threadPoolSize) {
+        final String name = appender.getName();
+        return Executors.newFixedThreadPool(threadPoolSize, new ThreadFactory() {
+
+            private final AtomicInteger idx = new AtomicInteger(1);
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r);
+                thread.setName(name + "-" + idx.getAndIncrement());
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
 
     public static void shutdown(Appender<?> appender, ExecutorService executor, long waitMillis) {
         executor.shutdown();

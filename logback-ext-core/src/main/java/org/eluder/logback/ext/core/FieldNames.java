@@ -1,4 +1,4 @@
-package org.eluder.logback.ext.jackson;
+package org.eluder.logback.ext.core;
 
 public class FieldNames {
     

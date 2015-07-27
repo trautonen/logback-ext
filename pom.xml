@@ -53,6 +53,7 @@
     <module>logback-ext-aws-core</module>
     <module>logback-ext-sqs-appender</module>
     <module>logback-ext-sns-appender</module>
+    <module>logback-ext-dynamodb-appender</module>
   </modules>
 
   <dependencyManagement>

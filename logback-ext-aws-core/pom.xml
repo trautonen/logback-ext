@@ -11,10 +11,6 @@
 
   <artifactId>logback-ext-aws-core</artifactId>
 
-  <properties>
-    <aws.version>1.9.33</aws.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.eluder.logback</groupId>

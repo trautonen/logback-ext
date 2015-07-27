@@ -9,7 +9,9 @@ import com.amazonaws.services.sns.model.PublishResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AppenderExecutors;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -44,7 +46,7 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     }
 
     @Override
-    protected void doInit() {
+    protected void doStart() {
         sns = new AmazonSNSAsyncClient(
                 getCredentials(),
                 getClientConfiguration(),
@@ -54,7 +56,7 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     }
 
     @Override
-    protected void doClose() {
+    protected void doStop() {
         if (sns != null) {
             AppenderExecutors.shutdown(this, sns.getExecutorService(), maxFlushTime);
             sns.shutdown();
@@ -63,18 +65,26 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     }
 
     @Override
-    protected void handle(final String event) throws Exception {
-        PublishRequest request = new PublishRequest(topic, event, subject);
+    protected void handle(final ILoggingEvent event, final String encoded) throws Exception {
+        PublishRequest request = new PublishRequest(topic, encoded, subject);
+        final CountDownLatch latch = new CountDownLatch(1);
         sns.publishAsync(request, new AsyncHandler<PublishRequest, PublishResult>() {
             @Override
             public void onError(Exception exception) {
                 addWarn(format("Appender '%s' failed to send logging event '%s' to SNS topic '%s'", getName(), event, topic), exception);
+                latch.countDown();
             }
 
             @Override
             public void onSuccess(PublishRequest request, PublishResult publishResult) {
-                // noop
+                latch.countDown();
             }
         });
+        try {
+            latch.await(maxFlushTime, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            addWarn(format("Appender '%s' was interrupted, a logging message might have been lost or shutdown was initiated", getName()));
+            Thread.currentThread().interrupt();
+        }
     }
 }

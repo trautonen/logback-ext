@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
+import org.eluder.logback.ext.core.FieldNames;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

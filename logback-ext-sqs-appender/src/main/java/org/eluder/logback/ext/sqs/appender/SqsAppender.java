@@ -10,7 +10,9 @@ import org.eluder.logback.ext.aws.core.AppenderExecutors;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
 
@@ -44,7 +46,7 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     }
 
     @Override
-    protected void doInit() {
+    protected void doStart() {
         sqs = new AmazonSQSAsyncClient(
                 getCredentials(),
                 getClientConfiguration(),
@@ -54,7 +56,7 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     }
 
     @Override
-    protected void doClose() {
+    protected void doStop() {
         if (sqs != null) {
             AppenderExecutors.shutdown(this, sqs.getExecutorService(), maxFlushTime);
             sqs.shutdown();
@@ -71,19 +73,27 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent
     }
 
     @Override
-    protected void handle(final String event) throws Exception {
-        SendMessageRequest request = new SendMessageRequest(queueUrl, event);
+    protected void handle(final ILoggingEvent event, final String encoded) throws Exception {
+        SendMessageRequest request = new SendMessageRequest(queueUrl, encoded);
+        final CountDownLatch latch = new CountDownLatch(1);
         sqs.sendMessageAsync(request, new AsyncHandler<SendMessageRequest, SendMessageResult>() {
             @Override
             public void onError(Exception exception) {
                 addWarn(format("Appender '%s' failed to send logging event '%s' to SQS queue '%s'", getName(), event, queueUrl), exception);
+                latch.countDown();
             }
 
             @Override
             public void onSuccess(SendMessageRequest request, SendMessageResult result) {
-                // noop
+                latch.countDown();
             }
         });
+        try {
+            latch.await(maxFlushTime, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            addWarn(format("Appender '%s' was interrupted, a logging message might have been lost or shutdown was initiated", getName()));
+            Thread.currentThread().interrupt();
+        }
     }
 
 }

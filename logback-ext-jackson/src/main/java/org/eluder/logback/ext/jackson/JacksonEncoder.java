@@ -2,10 +2,11 @@ package org.eluder.logback.ext.jackson;
 
 import ch.qos.logback.classic.pattern.ThrowableProxyConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.spi.ContextAwareBase;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eluder.logback.ext.core.CharacterEncoder;
+import org.eluder.logback.ext.core.FieldNames;
 import org.slf4j.Marker;
 
 import java.io.IOException;
@@ -17,28 +18,42 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
-public class JacksonEncoder extends ContextAwareBase implements Encoder<ILoggingEvent> {
+public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder<ILoggingEvent> {
 
     private final ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
-    private final ThrowableProxyConverter throwableProxyConverter = new ThrowableProxyConverter();
-    
+
     private Charset charset = Charset.forName("UTF-8");
     private FieldNames fieldNames = new FieldNames();
     private DateFormat timeStampFormat;
     
     private boolean started;
     private JsonWriter writer;
+    private ThrowableProxyConverter throwableProxyConverter;
 
-    public void setCharset(Charset charset) {
+    @Override
+    public final void setCharset(Charset charset) {
         this.charset = charset;
     }
 
-    public void setFieldNames(FieldNames fieldNames) {
+    @Override
+    public final Charset getCharset() {
+        return charset;
+    }
+
+    public final void setFieldNames(FieldNames fieldNames) {
         this.fieldNames = fieldNames;
     }
-    
-    public void setTimeStampFormat(String timeStampFormat) {
+
+    public final FieldNames getFieldNames() {
+        return fieldNames;
+    }
+
+    public final void setTimeStampFormat(String timeStampFormat) {
         this.timeStampFormat = new SimpleDateFormat(timeStampFormat);
+    }
+
+    public final DateFormat getTimeStampFormat() {
+        return timeStampFormat;
     }
 
     @Override
@@ -48,6 +63,8 @@ public class JacksonEncoder extends ContextAwareBase implements Encoder<ILogging
 
     @Override
     public void start() {
+        throwableProxyConverter = new ThrowableProxyConverter();
+        throwableProxyConverter.setContext(context);
         throwableProxyConverter.start();
         started = true;
     }
@@ -56,6 +73,7 @@ public class JacksonEncoder extends ContextAwareBase implements Encoder<ILogging
     public void stop() {
         started = false;
         throwableProxyConverter.stop();
+        throwableProxyConverter = null;
     }
 
     @Override

@@ -3,19 +3,13 @@ package org.eluder.logback.ext.aws.core;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.internal.StaticCredentialsProvider;
 import org.eluder.logback.ext.core.EncodingStringAppender;
-
-import java.io.Closeable;
 
 import static java.lang.String.format;
 
-public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStringAppender<E> implements Closeable {
+public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStringAppender<E> implements AWSCredentials {
+
+    private final AwsSupport awsSupport = new AwsSupport();
 
     private String accessKey;
     private String secretKey;
@@ -25,8 +19,18 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
         this.accessKey = accessKey;
     }
 
+    @Override
+    public String getAWSAccessKeyId() {
+        return accessKey;
+    }
+
     public final void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
+    }
+
+    @Override
+    public String getAWSSecretKey() {
+        return secretKey;
     }
 
     public void setMaxPayloadSize(int maxPayloadSize) {
@@ -37,8 +41,7 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
     public void start() {
         lock.lock();
         try {
-            close();
-            doInit();
+            doStart();
             super.start();
         } finally {
             lock.unlock();
@@ -50,39 +53,23 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
         lock.lock();
         try {
             super.stop();
-            close();
+            doStop();
         } finally {
             lock.unlock();
         }
 
     }
 
-    @Override
-    public void close() {
-        lock.lock();
-        try {
-            doClose();
-        } finally {
-            lock.unlock();
-        }
-    }
+    protected abstract void doStart();
 
-    protected abstract void doInit();
-
-    protected abstract void doClose();
+    protected abstract void doStop();
 
     protected AWSCredentialsProvider getCredentials() {
-        return new AWSCredentialsProviderChain(
-                new EnvironmentVariableCredentialsProvider(),
-                new SystemPropertiesCredentialsProvider(),
-                new StaticCredentialsProvider(new AppenderCredentials()),
-                new ProfileCredentialsProvider(),
-                new InstanceProfileCredentialsProvider()
-        );
+        return awsSupport.getCredentials(this);
     }
 
     protected ClientConfiguration getClientConfiguration() {
-        return new ClientConfiguration();
+        return awsSupport.getClientConfiguration();
     }
 
     @Override
@@ -93,18 +80,6 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
             return null;
         } else {
             return converted;
-        }
-    }
-
-    private class AppenderCredentials implements AWSCredentials {
-        @Override
-        public String getAWSAccessKeyId() {
-            return accessKey;
-        }
-
-        @Override
-        public String getAWSSecretKey() {
-            return secretKey;
         }
     }
 
