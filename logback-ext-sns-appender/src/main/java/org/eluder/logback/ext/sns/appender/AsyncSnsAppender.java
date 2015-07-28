@@ -14,6 +14,7 @@ public class AsyncSnsAppender extends AsyncAppender {
 
     public AsyncSnsAppender() {
         SnsAppender appender = new SnsAppender();
+        appender.setAsyncParent(true);
         addAppender(appender);
         this.appender = appender;
     }

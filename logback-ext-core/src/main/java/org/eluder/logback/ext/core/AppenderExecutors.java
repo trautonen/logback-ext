@@ -1,7 +1,8 @@
-package org.eluder.logback.ext.aws.core;
+package org.eluder.logback.ext.core;
 
 import ch.qos.logback.core.Appender;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -38,6 +39,24 @@ public class AppenderExecutors {
             appender.addWarn(format("Executor for %s did not shut down in %d milliseconds, " +
                             "logging events might have been discarded",
                     appender.getName(), waitMillis));
+        }
+    }
+
+    public static void awaitLatch(Appender<?> appender, CountDownLatch latch, long waitMillis) {
+        if (latch.getCount() > 0) {
+            try {
+                boolean completed = latch.await(waitMillis, TimeUnit.MILLISECONDS);
+                if (!completed) {
+                    appender.addWarn(format("Appender '%s' did not complete sending event in %d milliseconds, " +
+                                    "the event might have been lost",
+                            appender.getName(), waitMillis));
+                }
+            } catch (InterruptedException ex) {
+                appender.addWarn(format("Appender '%s' was interrupted, " +
+                                "a logging event might have been lost or shutdown was initiated",
+                        appender.getName()));
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

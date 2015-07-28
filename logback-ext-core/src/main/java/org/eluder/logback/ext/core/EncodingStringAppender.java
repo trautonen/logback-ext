@@ -1,5 +1,6 @@
 package org.eluder.logback.ext.core;
 
+import ch.qos.logback.core.Context;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.encoder.Encoder;
@@ -22,12 +23,12 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
     private Encoder<E> encoder;
 
     public final void setCharset(Charset charset) {
-        this.charset = charset;
         if (encoder instanceof LayoutWrappingEncoder) {
             ((LayoutWrappingEncoder) encoder).setCharset(charset);
         } else if (encoder instanceof CharacterEncoder) {
             ((CharacterEncoder<?>) encoder).setCharset(charset);
         }
+        this.charset = charset;
     }
 
     public final void setBinary(boolean binary) {
@@ -36,7 +37,7 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
     
     public final void setEncoder(Encoder<E> encoder) {
         this.encoder = encoder;
-        this.encoder.setContext(context);
+        setContext(context);
         setCharset(charset);
     }
 
@@ -44,6 +45,14 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
         LayoutWrappingEncoder<E> enc = new LayoutWrappingEncoder<E>();
         enc.setLayout(layout);
         setEncoder(enc);
+    }
+
+    @Override
+    public void setContext(Context context) {
+        if (encoder != null) {
+            encoder.setContext(context);
+        }
+        super.setContext(context);
     }
 
     protected final Charset getCharset() {

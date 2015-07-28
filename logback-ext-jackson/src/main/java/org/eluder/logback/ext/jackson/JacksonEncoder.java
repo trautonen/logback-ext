@@ -2,6 +2,7 @@ package org.eluder.logback.ext.jackson;
 
 import ch.qos.logback.classic.pattern.ThrowableProxyConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Context;
 import ch.qos.logback.core.spi.ContextAwareBase;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder<ILoggingEvent> {
 
     private final ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+    private final ThrowableProxyConverter throwableProxyConverter = new ThrowableProxyConverter();
 
     private Charset charset = Charset.forName("UTF-8");
     private FieldNames fieldNames = new FieldNames();
@@ -28,7 +30,6 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
     
     private boolean started;
     private JsonWriter writer;
-    private ThrowableProxyConverter throwableProxyConverter;
 
     @Override
     public final void setCharset(Charset charset) {
@@ -57,14 +58,18 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
     }
 
     @Override
+    public void setContext(Context context) {
+        throwableProxyConverter.setContext(context);
+        super.setContext(context);
+    }
+
+    @Override
     public boolean isStarted() {
         return started;
     }
 
     @Override
     public void start() {
-        throwableProxyConverter = new ThrowableProxyConverter();
-        throwableProxyConverter.setContext(context);
         throwableProxyConverter.start();
         started = true;
     }
@@ -73,7 +78,6 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
     public void stop() {
         started = false;
         throwableProxyConverter.stop();
-        throwableProxyConverter = null;
     }
 
     @Override

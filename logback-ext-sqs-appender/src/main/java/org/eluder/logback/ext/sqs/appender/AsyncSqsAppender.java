@@ -14,6 +14,7 @@ public class AsyncSqsAppender extends AsyncAppender {
     
     public AsyncSqsAppender() {
         SqsAppender appender = new SqsAppender();
+        appender.setAsyncParent(true);
         addAppender(appender);
         this.appender = appender;
     }

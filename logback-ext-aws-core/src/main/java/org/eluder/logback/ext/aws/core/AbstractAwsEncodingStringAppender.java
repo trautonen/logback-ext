@@ -3,24 +3,36 @@ package org.eluder.logback.ext.aws.core;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.core.EncodingStringAppender;
 
 import static java.lang.String.format;
 
 public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStringAppender<E> implements AWSCredentials {
 
-    private final AwsSupport awsSupport = new AwsSupport();
+    protected final AwsSupport awsSupport;
 
     private String accessKey;
     private String secretKey;
     private int maxPayloadSize = 256;
+    private boolean asyncParent = false;
+    private int threadPoolSize = AppenderExecutors.DEFAULT_THREAD_POOL_SIZE;
+    private int maxFlushTime = AppenderExecutors.DEFAULT_MAX_FLUSH_TIME;
+
+    protected AbstractAwsEncodingStringAppender() {
+        this(new AwsSupport());
+    }
+
+    protected AbstractAwsEncodingStringAppender(AwsSupport awsSupport) {
+        this.awsSupport = awsSupport;
+    }
 
     public final void setAccessKey(String accessKey) {
         this.accessKey = accessKey;
     }
 
     @Override
-    public String getAWSAccessKeyId() {
+    public final String getAWSAccessKeyId() {
         return accessKey;
     }
 
@@ -29,12 +41,40 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
     }
 
     @Override
-    public String getAWSSecretKey() {
+    public final String getAWSSecretKey() {
         return secretKey;
     }
 
-    public void setMaxPayloadSize(int maxPayloadSize) {
+    public final void setMaxPayloadSize(int maxPayloadSize) {
         this.maxPayloadSize = maxPayloadSize;
+    }
+
+    protected final int getMaxPayloadSize() {
+        return maxPayloadSize;
+    }
+
+    public final void setAsyncParent(boolean asyncParent) {
+        this.asyncParent = asyncParent;
+    }
+
+    protected final boolean isAsyncParent() {
+        return asyncParent;
+    }
+
+    public final void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
+    protected final int getThreadPoolSize() {
+        return threadPoolSize;
+    }
+
+    public final void setMaxFlushTime(int maxFlushTime) {
+        this.maxFlushTime = maxFlushTime;
+    }
+
+    protected final int getMaxFlushTime() {
+        return maxFlushTime;
     }
 
     @Override
