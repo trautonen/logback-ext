@@ -37,8 +37,8 @@ public class AppenderExecutors {
         boolean completed = awaitTermination(appender, executor, waitMillis);
         if (!completed) {
             appender.addWarn(format("Executor for %s did not shut down in %d milliseconds, " +
-                            "logging events might have been discarded",
-                    appender.getName(), waitMillis));
+                                    "logging events might have been discarded",
+                                    appender.getName(), waitMillis));
         }
     }
 
@@ -48,13 +48,13 @@ public class AppenderExecutors {
                 boolean completed = latch.await(waitMillis, TimeUnit.MILLISECONDS);
                 if (!completed) {
                     appender.addWarn(format("Appender '%s' did not complete sending event in %d milliseconds, " +
-                                    "the event might have been lost",
-                            appender.getName(), waitMillis));
+                                            "the event might have been lost",
+                                            appender.getName(), waitMillis));
                 }
             } catch (InterruptedException ex) {
                 appender.addWarn(format("Appender '%s' was interrupted, " +
-                                "a logging event might have been lost or shutdown was initiated",
-                        appender.getName()));
+                                        "a logging event might have been lost or shutdown was initiated",
+                                        appender.getName()));
                 Thread.currentThread().interrupt();
             }
         }
@@ -72,7 +72,7 @@ public class AppenderExecutors {
                     return executor.awaitTermination(waitMillis - waited, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException ie2) {
                     appender.addError(format("Shut down of executor for %s was interrupted",
-                            appender.getName()));
+                                             appender.getName()));
                 }
             }
             Thread.currentThread().interrupt();
