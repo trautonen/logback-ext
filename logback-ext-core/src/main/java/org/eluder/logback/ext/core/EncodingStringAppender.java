@@ -87,7 +87,9 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
         lock.lock();
         try {
             super.stop();
-            encoder.stop();
+            if (encoder != null) {
+                encoder.stop();
+            }
         } finally {
             lock.unlock();
         }
