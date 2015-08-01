@@ -1,11 +1,13 @@
 package org.eluder.logback.ext.sns.appender;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.filter.Filter;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 
@@ -14,13 +16,21 @@ import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
-public class SnsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent> {
+public class SnsAppender extends AbstractAwsEncodingStringAppender {
 
     private String region;
     private String topic;
     private String subject;
 
     private AmazonSNSAsyncClient sns;
+
+    public SnsAppender() {
+        super();
+    }
+
+    protected SnsAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+        super(awsSupport, sdkLoggingFilter);
+    }
 
     public void setRegion(String region) {
         this.region = region;

@@ -22,6 +22,10 @@
     </dependency>
     <dependency>
       <groupId>org.eluder.logback</groupId>
+      <artifactId>logback-ext-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eluder.logback</groupId>
       <artifactId>logback-ext-aws-core</artifactId>
     </dependency>
     <dependency>

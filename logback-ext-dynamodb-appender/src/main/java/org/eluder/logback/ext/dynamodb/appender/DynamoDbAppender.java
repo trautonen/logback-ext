@@ -1,6 +1,7 @@
 package org.eluder.logback.ext.dynamodb.appender;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.filter.Filter;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.dynamodbv2.document.Item;
@@ -10,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.jackson.JacksonEncoder;
@@ -20,7 +22,7 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.lang.String.format;
 
-public class DynamoDbAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent> {
+public class DynamoDbAppender extends AbstractAwsEncodingStringAppender {
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
@@ -29,6 +31,14 @@ public class DynamoDbAppender extends AbstractAwsEncodingStringAppender<ILogging
     private String primaryKey = "Id";
 
     private AmazonDynamoDBAsyncClient dynamoDb;
+
+    public DynamoDbAppender() {
+        super();
+    }
+
+    protected DynamoDbAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+        super(awsSupport, sdkLoggingFilter);
+    }
 
     public void setRegion(String region) {
         this.region = region;

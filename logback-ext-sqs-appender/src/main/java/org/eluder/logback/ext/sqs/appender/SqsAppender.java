@@ -1,10 +1,12 @@
 package org.eluder.logback.ext.sqs.appender;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.filter.Filter;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.core.AppenderExecutors;
 
@@ -15,11 +17,19 @@ import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
-public class SqsAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent> {
+public class SqsAppender extends AbstractAwsEncodingStringAppender {
 
     private String queueUrl;
 
     private AmazonSQSAsyncClient sqs;
+
+    public SqsAppender() {
+        super();
+    }
+
+    protected SqsAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+        super(awsSupport, sdkLoggingFilter);
+    }
 
     public final void setQueueUrl(String queueUrl) {
         this.queueUrl = queueUrl;
