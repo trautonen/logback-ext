@@ -1,5 +1,8 @@
 package org.eluder.logback.ext.aws.core;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Context;
+import ch.qos.logback.core.filter.Filter;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -8,9 +11,10 @@ import org.eluder.logback.ext.core.EncodingStringAppender;
 
 import static java.lang.String.format;
 
-public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStringAppender<E> implements AWSCredentials {
+public abstract class AbstractAwsEncodingStringAppender extends EncodingStringAppender<ILoggingEvent> implements AWSCredentials {
 
     protected final AwsSupport awsSupport;
+    protected final Filter<ILoggingEvent> sdkLoggingFilter;
 
     private String accessKey;
     private String secretKey;
@@ -20,15 +24,43 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
     private int maxFlushTime = AppenderExecutors.DEFAULT_MAX_FLUSH_TIME;
 
     protected AbstractAwsEncodingStringAppender() {
-        this(new AwsSupport());
+        this(new AwsSupport(), new InternalSdkLoggingFilter());
     }
 
-    protected AbstractAwsEncodingStringAppender(AwsSupport awsSupport) {
+    protected AbstractAwsEncodingStringAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
         this.awsSupport = awsSupport;
+        this.sdkLoggingFilter = sdkLoggingFilter;
+        addFilter(sdkLoggingFilter);
     }
 
     public final void setAccessKey(String accessKey) {
         this.accessKey = accessKey;
+    }
+
+    public final void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
+    public final void setMaxPayloadSize(int maxPayloadSize) {
+        this.maxPayloadSize = maxPayloadSize;
+    }
+
+    public final void setAsyncParent(boolean asyncParent) {
+        this.asyncParent = asyncParent;
+    }
+
+    public final void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
+    public final void setMaxFlushTime(int maxFlushTime) {
+        this.maxFlushTime = maxFlushTime;
+    }
+
+    @Override
+    public void setContext(Context context) {
+        sdkLoggingFilter.setContext(context);
+        super.setContext(context);
     }
 
     @Override
@@ -36,41 +68,21 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
         return accessKey;
     }
 
-    public final void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
-    }
-
     @Override
     public final String getAWSSecretKey() {
         return secretKey;
-    }
-
-    public final void setMaxPayloadSize(int maxPayloadSize) {
-        this.maxPayloadSize = maxPayloadSize;
     }
 
     protected final int getMaxPayloadSize() {
         return maxPayloadSize;
     }
 
-    public final void setAsyncParent(boolean asyncParent) {
-        this.asyncParent = asyncParent;
-    }
-
     protected final boolean isAsyncParent() {
         return asyncParent;
     }
 
-    public final void setThreadPoolSize(int threadPoolSize) {
-        this.threadPoolSize = threadPoolSize;
-    }
-
     protected final int getThreadPoolSize() {
         return threadPoolSize;
-    }
-
-    public final void setMaxFlushTime(int maxFlushTime) {
-        this.maxFlushTime = maxFlushTime;
     }
 
     protected final int getMaxFlushTime() {
@@ -81,6 +93,7 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
     public void start() {
         lock.lock();
         try {
+            sdkLoggingFilter.start();
             doStart();
             super.start();
         } finally {
@@ -94,10 +107,10 @@ public abstract class AbstractAwsEncodingStringAppender<E> extends EncodingStrin
         try {
             super.stop();
             doStop();
+            sdkLoggingFilter.stop();
         } finally {
             lock.unlock();
         }
-
     }
 
     protected abstract void doStart();
