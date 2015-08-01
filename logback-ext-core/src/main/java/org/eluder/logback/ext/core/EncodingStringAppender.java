@@ -32,6 +32,9 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
     }
 
     public final void setBinary(boolean binary) {
+        if (binary) {
+            addInfo(format("Appender '%s' is set to binary mode, events are converted to Base64 strings", getName()));
+        }
         this.binary = binary;
     }
     
