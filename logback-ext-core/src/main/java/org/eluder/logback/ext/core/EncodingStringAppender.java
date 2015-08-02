@@ -131,7 +131,7 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
 
     protected void doHandle(E event, String encoded) {
         try {
-            if (encoded != null && !encoded.isEmpty()) {
+            if (encoded != null) {
                 handle(event, encoded);
             }
         } catch (Exception ex) {
