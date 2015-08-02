@@ -25,19 +25,23 @@ import static java.lang.String.format;
 public class DynamoDbAppender extends AbstractAwsEncodingStringAppender {
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    private static final String DEFAULT_PRIMARY_KEY = "Id";
+    private static final int DEFAULT_MAX_PAYLOAD_SIZE = 384;
 
     private String region;
     private String table;
-    private String primaryKey = "Id";
+    private String primaryKey = DEFAULT_PRIMARY_KEY;
 
     private AmazonDynamoDBAsyncClient dynamoDb;
 
     public DynamoDbAppender() {
         super();
+        setMaxPayloadSize(DEFAULT_MAX_PAYLOAD_SIZE);
     }
 
     protected DynamoDbAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
         super(awsSupport, sdkLoggingFilter);
+        setMaxPayloadSize(DEFAULT_MAX_PAYLOAD_SIZE);
     }
 
     public void setRegion(String region) {
