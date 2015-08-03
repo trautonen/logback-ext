@@ -13,7 +13,10 @@ public class AsyncSnsAppender extends AsyncAppender {
     private final SnsAppender appender;
 
     public AsyncSnsAppender() {
-        SnsAppender appender = new SnsAppender();
+        this(new SnsAppender());
+    }
+
+    protected AsyncSnsAppender(SnsAppender appender) {
         appender.setAsyncParent(true);
         addAppender(appender);
         this.appender = appender;

@@ -19,7 +19,7 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
     protected final ReentrantLock lock = new ReentrantLock(true);
 
     private Charset charset = Charset.forName("UTF-8");
-    private boolean binary;
+    private boolean binary = false;
     private Encoder<E> encoder;
 
     public final void setCharset(Charset charset) {

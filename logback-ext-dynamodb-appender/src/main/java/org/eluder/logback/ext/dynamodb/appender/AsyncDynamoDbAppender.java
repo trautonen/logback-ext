@@ -13,7 +13,10 @@ public class AsyncDynamoDbAppender extends AsyncAppender {
     private final DynamoDbAppender appender;
 
     public AsyncDynamoDbAppender() {
-        DynamoDbAppender appender = new DynamoDbAppender();
+        this(new DynamoDbAppender());
+    }
+
+    protected AsyncDynamoDbAppender(DynamoDbAppender appender) {
         appender.setAsyncParent(true);
         addAppender(appender);
         this.appender = appender;

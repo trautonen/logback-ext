@@ -13,7 +13,10 @@ public class AsyncSqsAppender extends AsyncAppender {
     private final SqsAppender appender;
     
     public AsyncSqsAppender() {
-        SqsAppender appender = new SqsAppender();
+        this(new SqsAppender());
+    }
+
+    protected AsyncSqsAppender(SqsAppender appender) {
         appender.setAsyncParent(true);
         addAppender(appender);
         this.appender = appender;
