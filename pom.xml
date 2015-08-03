@@ -16,7 +16,7 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Logback Extensions</name>
+  <name>logback-ext</name>
   <description>Extensions for Logback logging library.</description>
   <url>https://github.com/trautonen/logback-ext</url>
   <inceptionYear>2014</inceptionYear>
