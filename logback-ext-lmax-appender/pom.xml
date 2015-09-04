@@ -18,6 +18,16 @@
       <artifactId>logback-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-access</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.eluder.logback</groupId>
       <artifactId>logback-ext-core</artifactId>
     </dependency>

@@ -18,10 +18,13 @@ import org.eluder.logback.ext.core.AppenderExecutors;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.String.format;
 
 public class DisruptorAppender<E extends DeferredProcessingAware> extends UnsynchronizedAppenderBase<E> {
+
+    protected final ReentrantLock lock = new ReentrantLock(true);
 
     private static final int SLEEP_ON_DRAIN = 50;
     private static final int DEFAULT_THREAD_POOL_SIZE = 1;
@@ -78,29 +81,47 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void start() {
-        executor = AppenderExecutors.newExecutor(this, threadPoolSize);
-        disruptor = new Disruptor<LogEvent<E>>(
-                eventFactory,
-                bufferSize,
-                executor,
-                producerType,
-                waitStrategy
-        );
-        disruptor.handleExceptionsWith(exceptionHandler);
-        disruptor.handleEventsWith(new ClearingEventHandler<E>(eventHandler));
-        disruptor.start();
-        super.start();
+        if (eventHandler == null) {
+            addError(format("Event handler not set for appender '%s'", getName()));
+            return;
+        }
+        lock.lock();
+        try {
+            if (isStarted()) {
+                return;
+            }
+            executor = AppenderExecutors.newExecutor(this, threadPoolSize);
+            disruptor = new Disruptor<LogEvent<E>>(
+                    eventFactory,
+                    bufferSize,
+                    executor,
+                    producerType,
+                    waitStrategy
+            );
+            disruptor.handleExceptionsWith(exceptionHandler);
+            disruptor.handleEventsWith(new ClearingEventHandler<E>(eventHandler));
+            disruptor.start();
+            super.start();
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public void stop() {
-        if (!super.isStarted()) {
-            return;
+        lock.lock();
+        try {
+            if (!isStarted()) {
+                return;
+            }
+            super.stop();
+            shutdownDisruptor();
+            executor.shutdownNow();
+        } finally {
+            lock.unlock();
         }
-        super.stop();
-        shutdownDisruptor();
-        executor.shutdownNow();
     }
 
     @Override
@@ -135,7 +156,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
 
     private boolean hashBackLog() {
         RingBuffer<LogEvent<E>> buffer = disruptor.getRingBuffer();
-        return buffer.hasAvailableCapacity(buffer.getBufferSize());
+        return !buffer.hasAvailableCapacity(buffer.getBufferSize());
     }
 
     protected static class LogEvent<E> {

@@ -7,7 +7,7 @@
   <parent>
     <artifactId>eluder-parent</artifactId>
     <groupId>org.eluder</groupId>
-    <version>7</version>
+    <version>8-SNAPSHOT</version>
     <relativePath></relativePath>
   </parent>
 
@@ -55,7 +55,7 @@
     <module>logback-ext-sqs-appender</module>
     <module>logback-ext-sns-appender</module>
     <module>logback-ext-dynamodb-appender</module>
-    <module>logback-ext-lmax</module>
+    <module>logback-ext-lmax-appender</module>
   </modules>
 
   <dependencyManagement>
@@ -83,6 +83,16 @@
       <dependency>
         <groupId>org.eluder.logback</groupId>
         <artifactId>logback-ext-sns-appender</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-dynamodb-appender</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eluder.logback</groupId>
+        <artifactId>logback-ext-lmax-appender</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
