@@ -45,6 +45,7 @@
     <guava.version>18.0</guava.version>
     <jackson.version>2.5.4</jackson.version>
     <aws.version>1.10.2</aws.version>
+    <lmax.version>3.3.2</lmax.version>
   </properties>
 
   <modules>
@@ -54,6 +55,7 @@
     <module>logback-ext-sqs-appender</module>
     <module>logback-ext-sns-appender</module>
     <module>logback-ext-dynamodb-appender</module>
+    <module>logback-ext-lmax</module>
   </modules>
 
   <dependencyManagement>

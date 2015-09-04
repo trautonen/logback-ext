@@ -50,7 +50,7 @@ public class AppenderExecutors {
 
             @Override
             public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r);
+                Thread thread = Executors.defaultThreadFactory().newThread(r);
                 thread.setName(name + "-" + idx.getAndIncrement());
                 thread.setDaemon(true);
                 return thread;
