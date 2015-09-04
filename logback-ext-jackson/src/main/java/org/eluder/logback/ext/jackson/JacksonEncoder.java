@@ -53,6 +53,7 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
     private Charset charset = Charset.forName("UTF-8");
     private FieldNames fieldNames = new FieldNames();
     private DateFormat timeStampFormat;
+    private boolean newline;
     
     private boolean started;
     private JsonWriter writer;
@@ -81,6 +82,14 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
 
     public final DateFormat getTimeStampFormat() {
         return timeStampFormat;
+    }
+
+    public final void setNewline(boolean newline) {
+        this.newline = newline;
+    }
+
+    public final boolean isNewline() {
+        return newline;
     }
 
     @Override
@@ -129,7 +138,11 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
         writeCallerData(ow, event);
         writeMarker(ow, event);
         writeMdc(ow, event);
-        ow.done().flush();
+        JsonWriter w = ow.done();
+        if (newline) {
+            w.newline();
+        }
+        w.flush();
     }
 
     protected ObjectMapper getMapper() {

@@ -27,6 +27,7 @@ package org.eluder.logback.ext.jackson;
  */
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Closeable;
@@ -42,7 +43,8 @@ public class JsonWriter implements Closeable {
     public JsonWriter(OutputStream os, Charset charset, ObjectMapper mapper) throws IOException {
         generator = mapper.getFactory()
                 .createGenerator(new OutputStreamWriter(os, charset))
-                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .setPrettyPrinter(new MinimalPrettyPrinter(""));
     }
 
     @Override
@@ -50,8 +52,14 @@ public class JsonWriter implements Closeable {
         generator.close();
     }
 
-    public void flush() throws IOException {
+    public JsonWriter flush() throws IOException {
         generator.flush();
+        return this;
+    }
+
+    public JsonWriter newline() throws IOException {
+        generator.writeRaw('\n');
+        return this;
     }
 
     public ObjectWriter<JsonWriter> writeObject() throws IOException {
