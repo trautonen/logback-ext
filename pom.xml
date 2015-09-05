@@ -46,6 +46,7 @@
     <jackson.version>2.5.4</jackson.version>
     <aws.version>1.10.2</aws.version>
     <lmax.version>3.3.2</lmax.version>
+    <jmh.version>1.10.5</jmh.version>
   </properties>
 
   <modules>
@@ -100,7 +101,42 @@
         <artifactId>assertj-core</artifactId>
         <version>2.1.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-core</artifactId>
+        <version>${jmh.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-generator-annprocess</artifactId>
+        <version>${jmh.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>benchmark</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <version>${maven.surefire.version}</version>
+              <configuration>
+                <includes>
+                  <include>**/*Perf.java</include>
+                </includes>
+                <excludes>
+                  <exclude>**/*Test.java</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

@@ -1,4 +1,4 @@
-package org.eluder.logback.ext.lmax;
+package org.eluder.logback.ext.lmax.appender;
 
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.ContextAware;
