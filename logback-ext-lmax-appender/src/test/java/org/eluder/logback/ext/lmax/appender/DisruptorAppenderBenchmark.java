@@ -1,15 +1,12 @@
 package org.eluder.logback.ext.lmax.appender;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-
-public class DisruptorAppenderBenchmark extends AppenderBenchmark {
+public class DisruptorAppenderBenchmark extends AppenderBenchmark<LoggingEventDisruptorAppender> {
 
     @Override
-    protected Appender<ILoggingEvent> createAppender(int consumers) {
+    protected LoggingEventDisruptorAppender createAppender(int consumers) {
         LoggingEventDisruptorAppender appender = new LoggingEventDisruptorAppender();
         appender.setName("disruptor");
-        appender.setBufferSize(262144);
+        appender.setBufferSize(1048576);
         appender.setThreadPoolSize(consumers);
         return appender;
     }

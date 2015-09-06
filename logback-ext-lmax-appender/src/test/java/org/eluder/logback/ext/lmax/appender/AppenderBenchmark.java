@@ -1,6 +1,5 @@
 package org.eluder.logback.ext.lmax.appender;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -11,97 +10,103 @@ import ch.qos.logback.core.spi.AppenderAttachable;
 import org.openjdk.jmh.annotations.*;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @State(Scope.Benchmark)
-@BenchmarkMode(Mode.Throughput)
-@OutputTimeUnit(TimeUnit.SECONDS)
-public abstract class AppenderBenchmark {
+public abstract class AppenderBenchmark<T extends Appender<ILoggingEvent> & AppenderAttachable<ILoggingEvent>> {
 
+    private static final int EVENTS = 32000;
     private static final LoggerContext CONTEXT = (LoggerContext) LoggerFactory.getILoggerFactory();
-    private static final LoggingEvent EVENT = new LoggingEvent(
-            "org.eluder.logback.ext.lmax.appender.LoggingEventDisruptorAppenderBenchmark",
-            CONTEXT.getLogger(Logger.ROOT_LOGGER_NAME), Level.INFO, "Hello world", null, null
-    );
 
+    private static final AtomicInteger idx = new AtomicInteger(0);
+    private static final CountDownLatch[] latches = new CountDownLatch[99999];
 
-    @Param({ "16000", "64000", "128000" })
-    public int events;
-
-    @Param({ "1", "4", "8" })
-    public int producers;
 
     @Param({ "1" })
     public int consumers;
 
-    private CountDownLatch latch;
-    private Appender<ILoggingEvent> appender;
-    private List<Thread> threads;
+    private EmulatingAppender controller;
+    private T appender;
 
-    @Setup(org.openjdk.jmh.annotations.Level.Iteration)
-    @SuppressWarnings("unchecked")
-    public void init() {
-        this.latch = new CountDownLatch(events);
-        this.appender = createAppender(consumers);
-        this.appender.setContext(CONTEXT);
-        ((AppenderAttachable<ILoggingEvent>) this.appender).addAppender(new EmulatingAppender(this.latch, CONTEXT));
-        this.appender.start();
-        this.threads = createThreads(this.appender);
+    @State(Scope.Thread)
+    public static class ThreadContext {
+        LoggingEvent event;
+        int index;
+
+        @Setup(Level.Trial)
+        public void setupContext() {
+            index = idx.getAndIncrement();
+            event = new LoggingEvent(
+                    "org.eluder.logback.ext.lmax.appender.AppenderBenchmark",
+                    CONTEXT.getLogger(Logger.ROOT_LOGGER_NAME), ch.qos.logback.classic.Level.INFO, "" + index, null, null
+            );
+        }
+
+        @Setup(Level.Invocation)
+        public void setupLatch() {
+            latches[index] = new CountDownLatch(EVENTS);
+        }
+
+        public void await() throws InterruptedException {
+            latches[index].await();
+        }
     }
 
-    @TearDown(org.openjdk.jmh.annotations.Level.Iteration)
-    public void clear() {
+    @Setup(Level.Trial)
+    public void setupAppender() {
+        controller = new EmulatingAppender(CONTEXT);
+        appender = createAppender(consumers);
+        appender.setContext(CONTEXT);
+        appender.addAppender(controller);
+
+        controller.start();
+        appender.start();
+    }
+
+    @TearDown(Level.Trial)
+    public void tearDownAppender() {
         appender.stop();
+        controller.stop();
     }
 
-    protected abstract Appender<ILoggingEvent> createAppender(int consumers);
+    protected abstract T createAppender(int consumers);
 
     @Benchmark
-    @Warmup(iterations = 3)
-    public void benchmarkAppender() throws Exception {
-        for (Thread t : threads) {
-            t.run();
-        }
-        for (Thread t : threads) {
-            t.join();
-        }
-        latch.await();
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.SECONDS)
+    @OperationsPerInvocation(EVENTS)
+    public void throughput(ThreadContext context) throws Exception {
+        append(context);
     }
 
-    private List<Thread> createThreads(final Appender<ILoggingEvent> appender) {
-        final int iterationsPerProducer = events / producers;
-        List<Thread> threads = new ArrayList<Thread>(producers);
-        for (int i = 0; i < producers; i++) {
-            threads.add(Executors.defaultThreadFactory().newThread(new Runnable() {
-                @Override
-                public void run() {
-                    for (int j = 0; j < iterationsPerProducer; j++) {
-                        appender.doAppend(EVENT);
-                    }
-                }
-            }));
+    @Benchmark
+    @BenchmarkMode(Mode.SampleTime)
+    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @OperationsPerInvocation(EVENTS)
+    public void latency(ThreadContext context) throws Exception {
+        append(context);
+    }
+
+    private void append(ThreadContext context) throws Exception {
+        for (int i = 0; i < EVENTS; i++) {
+            appender.doAppend(context.event);
         }
-        return threads;
+        context.await();
     }
 
     public static class EmulatingAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
-        private final CountDownLatch latch;
-
-        public EmulatingAppender(CountDownLatch latch, LoggerContext context) {
-            this.latch = latch;
+        public EmulatingAppender(LoggerContext context) {
             setContext(context);
             setName("emulator");
-            start();
         }
 
         @Override
         protected void append(ILoggingEvent eventObject) {
-            this.latch.countDown();
+            int index = Integer.parseInt(eventObject.getMessage());
+            latches[index].countDown();
         }
     }
 }
