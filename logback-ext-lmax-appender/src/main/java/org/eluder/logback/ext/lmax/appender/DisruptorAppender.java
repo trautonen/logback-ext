@@ -5,13 +5,13 @@ import ch.qos.logback.core.spi.ContextAware;
 import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.LifecycleAware;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.WaitStrategy;
+import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.eluder.logback.ext.core.AppenderExecutors;
@@ -33,7 +33,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
     private EventFactory<LogEvent<E>> eventFactory = new LogEventFactory<E>();
     private EventTranslatorOneArg<LogEvent<E>, E> eventTranslator = new LogEventTranslator<E>();
     private ExceptionHandler<LogEvent<E>> exceptionHandler = new LogExceptionHandler<E>(this);
-    private EventHandler<LogEvent<E>> eventHandler;
+    private WorkHandler<LogEvent<E>> eventHandler;
 
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private int bufferSize = DEFAULT_BUFFER_SIZE;
@@ -56,7 +56,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
         this.exceptionHandler = exceptionHandler;
     }
 
-    public void setEventHandler(EventHandler<LogEvent<E>> eventHandler) {
+    public void setEventHandler(WorkHandler<LogEvent<E>> eventHandler) {
         this.eventHandler = eventHandler;
     }
 
@@ -101,7 +101,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
                     waitStrategy
             );
             disruptor.handleExceptionsWith(exceptionHandler);
-            disruptor.handleEventsWith(new ClearingEventHandler<E>(eventHandler));
+            disruptor.handleEventsWithWorkerPool(createWorkers());
             disruptor.start();
             super.start();
         } finally {
@@ -132,6 +132,16 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
 
     protected void prepareForDeferredProcessing(E event) {
         event.prepareForDeferredProcessing();
+    }
+
+    @SuppressWarnings("unchecked")
+    private WorkHandler<LogEvent<E>>[] createWorkers() {
+        WorkHandler<LogEvent<E>> handler = new ClearingWorkHandler<E>(eventHandler);
+        WorkHandler<LogEvent<E>>[] workers = new WorkHandler[threadPoolSize];
+        for (int i = 0; i < threadPoolSize; i++) {
+            workers[i] = handler;
+        }
+        return workers;
     }
 
     private void shutdownDisruptor() {
@@ -204,34 +214,41 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
     /**
      * Clears logback event objects from distruptor event context to allow proper garbage collecting.
      */
-    private static class ClearingEventHandler<E> implements EventHandler<LogEvent<E>>, LifecycleAware {
+    private static class ClearingWorkHandler<E> implements WorkHandler<LogEvent<E>>, LifecycleAware {
 
-        private final EventHandler<LogEvent<E>> delegate;
+        private final WorkHandler<LogEvent<E>> delegate;
+        private boolean started = false;
 
-        public ClearingEventHandler(EventHandler<LogEvent<E>> delegate) {
+        public ClearingWorkHandler(WorkHandler<LogEvent<E>> delegate) {
             this.delegate = delegate;
         }
 
         @Override
-        public void onEvent(LogEvent<E> event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(LogEvent<E> event) throws Exception {
             try {
-                delegate.onEvent(event, sequence, endOfBatch);
+                delegate.onEvent(event);
             } finally {
                 event.event = null;
             }
         }
 
         @Override
-        public void onStart() {
-            if (delegate instanceof LifecycleAware) {
-                ((LifecycleAware) delegate).onStart();
+        public synchronized void onStart() {
+            if (!started) {
+                if (delegate instanceof LifecycleAware) {
+                    ((LifecycleAware) delegate).onStart();
+                }
+                started = true;
             }
         }
 
         @Override
-        public void onShutdown() {
-            if (delegate instanceof LifecycleAware) {
-                ((LifecycleAware) delegate).onShutdown();
+        public synchronized void onShutdown() {
+            if (started) {
+                started = false;
+                if (delegate instanceof LifecycleAware) {
+                    ((LifecycleAware) delegate).onShutdown();
+                }
             }
         }
     }

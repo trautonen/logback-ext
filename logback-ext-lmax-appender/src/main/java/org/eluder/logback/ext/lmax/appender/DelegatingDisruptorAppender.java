@@ -5,7 +5,7 @@ import ch.qos.logback.core.Context;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import ch.qos.logback.core.spi.DeferredProcessingAware;
-import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.WorkHandler;
 
 import java.util.Iterator;
 
@@ -14,7 +14,7 @@ public class DelegatingDisruptorAppender<E extends DeferredProcessingAware> exte
     private final AppenderAttachableImpl<E> appenders = new AppenderAttachableImpl<E>();
 
     public DelegatingDisruptorAppender() {
-        setEventHandler(new AppenderEventHandler());
+        setEventHandler(new AppendersWorkHandler());
     }
 
     @Override
@@ -115,9 +115,9 @@ public class DelegatingDisruptorAppender<E extends DeferredProcessingAware> exte
         super.setContext(context);
     }
 
-    private class AppenderEventHandler implements EventHandler<LogEvent<E>> {
+    private class AppendersWorkHandler implements WorkHandler<LogEvent<E>> {
         @Override
-        public void onEvent(LogEvent<E> event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(LogEvent<E> event) throws Exception {
             appenders.appendLoopOnAppenders(event.event);
         }
     }
