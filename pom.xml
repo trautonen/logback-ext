@@ -57,6 +57,7 @@
     <module>logback-ext-sns-appender</module>
     <module>logback-ext-dynamodb-appender</module>
     <module>logback-ext-cloudwatch-appender</module>
+    <module>logback-ext-kinesis-appender</module>
     <module>logback-ext-lmax-appender</module>
   </modules>
 
