@@ -34,9 +34,9 @@ import java.util.concurrent.CountDownLatch;
 
 public class LoggingEventHandler<REQUEST extends AmazonWebServiceRequest, RESULT> implements AsyncHandler<REQUEST, RESULT> {
 
-    private final ContextAware contextAware;
-    private final CountDownLatch latch;
-    private final String errorMessage;
+    protected final ContextAware contextAware;
+    protected final CountDownLatch latch;
+    protected final String errorMessage;
 
     public LoggingEventHandler(ContextAware contextAware, CountDownLatch latch, String errorMessage) {
         this.contextAware = contextAware;
