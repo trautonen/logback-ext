@@ -158,7 +158,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
         try {
             disruptor.shutdown(0, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
-            addWarn(format("Disruptor for %s did not shut down in %d milliseconds, " +
+            addWarn(format("Disruptor for appender %s did not shut down in %d milliseconds, " +
                            "logging events might have been discarded",
                            getName(), maxFlushTime));
         }
@@ -197,7 +197,11 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
 
         @Override
         public void handleEventException(Throwable ex, long sequence, LogEvent<E> event) {
-            context.addError("Failed to process event: " + event.event, ex);
+            if (ex instanceof InterruptedException) {
+                context.addWarn("Disruptor was interrupted while processing event");
+            } else {
+                context.addError("Failed to process event", ex);
+            }
         }
 
         @Override
