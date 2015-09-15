@@ -40,6 +40,7 @@ import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
+import org.eluder.logback.ext.core.StringPayloadConverter;
 import org.eluder.logback.ext.jackson.JacksonEncoder;
 
 import java.util.Map;
@@ -48,7 +49,7 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.lang.String.format;
 
-public class DynamoDbAppender extends AbstractAwsEncodingStringAppender {
+public class DynamoDbAppender extends AbstractAwsEncodingStringAppender<String> {
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     private static final String DEFAULT_PRIMARY_KEY = "Id";
@@ -90,6 +91,7 @@ public class DynamoDbAppender extends AbstractAwsEncodingStringAppender {
             encoder.setTimeStampFormat(TIMESTAMP_FORMAT);
             setEncoder(encoder);
         }
+        setConverter(new StringPayloadConverter(getCharset(), isBinary()));
         super.start();
     }
 

@@ -39,7 +39,6 @@ import org.slf4j.Marker;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -52,7 +51,7 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
 
     private Charset charset = Charset.forName("UTF-8");
     private FieldNames fieldNames = new FieldNames();
-    private DateFormat timeStampFormat;
+    private String timeStampFormat;
     private boolean newline;
     
     private boolean started;
@@ -77,10 +76,10 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
     }
 
     public final void setTimeStampFormat(String timeStampFormat) {
-        this.timeStampFormat = new SimpleDateFormat(timeStampFormat);
+        this.timeStampFormat = timeStampFormat;
     }
 
-    public final DateFormat getTimeStampFormat() {
+    public final String getTimeStampFormat() {
         return timeStampFormat;
     }
 
@@ -151,7 +150,7 @@ public class JacksonEncoder extends ContextAwareBase implements CharacterEncoder
 
     protected void writeTimeStamp(JsonWriter.ObjectWriter<JsonWriter> writer, ILoggingEvent event) throws IOException {
         if (timeStampFormat != null) {
-            String timeStamp = timeStampFormat.format(new Date(event.getTimeStamp()));
+            String timeStamp = new SimpleDateFormat(timeStampFormat).format(new Date(event.getTimeStamp()));
             writer.writeStringField(fieldNames.getTimeStamp(), timeStamp, isActive(fieldNames.getTimeStamp()));
         } else {
             writer.writeNumberField(fieldNames.getTimeStamp(), event.getTimeStamp(), isActive(fieldNames.getTimeStamp()));

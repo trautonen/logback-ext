@@ -36,13 +36,14 @@ import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
+import org.eluder.logback.ext.core.StringPayloadConverter;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
-public class SnsAppender extends AbstractAwsEncodingStringAppender {
+public class SnsAppender extends AbstractAwsEncodingStringAppender<String> {
 
     private String region;
     private String topic;
@@ -68,6 +69,12 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender {
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+    @Override
+    public void start() {
+        setConverter(new StringPayloadConverter(getCharset(), isBinary()));
+        super.start();
     }
 
     @Override

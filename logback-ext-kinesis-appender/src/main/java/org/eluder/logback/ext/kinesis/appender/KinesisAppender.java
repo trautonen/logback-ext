@@ -8,12 +8,13 @@ import com.amazonaws.services.kinesis.model.PutRecordResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.core.AppenderExecutors;
+import org.eluder.logback.ext.core.ByteArrayPayloadConverter;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
-public class KinesisAppender extends AbstractAwsEncodingStringAppender {
+public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
 
     private String region;
     private String stream;
@@ -26,6 +27,12 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender {
 
     public final void setStream(String stream) {
         this.stream = stream;
+    }
+
+    @Override
+    public void start() {
+        setConverter(new ByteArrayPayloadConverter());
+        super.start();
     }
 
     @Override
@@ -48,10 +55,10 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender {
     }
 
     @Override
-    protected void handle(ILoggingEvent event, String encoded) throws Exception {
-        ByteBuffer buffer = ByteBuffer.wrap(encoded.getBytes(getCharset()));
+    protected void handle(ILoggingEvent event, byte[] encoded) throws Exception {
+        ByteBuffer buffer = ByteBuffer.wrap(encoded);
         PutRecordRequest request = new PutRecordRequest()
-                .withPartitionKey(getPartitionKey(event, encoded))
+                .withPartitionKey(getPartitionKey(event))
                 .withStreamName(stream)
                 .withData(buffer);
         CountDownLatch latch = new CountDownLatch(isAsyncParent() ? 0 : 1);
@@ -59,7 +66,7 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender {
         AppenderExecutors.awaitLatch(this, latch, getMaxFlushTime());
     }
 
-    protected String getPartitionKey(ILoggingEvent event, String encoded) {
+    protected String getPartitionKey(ILoggingEvent event) {
         return UUID.randomUUID().toString();
     }
 }

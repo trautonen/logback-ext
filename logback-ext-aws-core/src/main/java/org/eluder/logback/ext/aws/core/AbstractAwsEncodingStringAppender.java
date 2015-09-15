@@ -37,7 +37,7 @@ import org.eluder.logback.ext.core.EncodingStringAppender;
 
 import static java.lang.String.format;
 
-public abstract class AbstractAwsEncodingStringAppender extends EncodingStringAppender<ILoggingEvent> implements AWSCredentials {
+public abstract class AbstractAwsEncodingStringAppender<P> extends EncodingStringAppender<ILoggingEvent, P> implements AWSCredentials {
 
     protected final AwsSupport awsSupport;
     protected final Filter<ILoggingEvent> sdkLoggingFilter;
@@ -152,14 +152,12 @@ public abstract class AbstractAwsEncodingStringAppender extends EncodingStringAp
     }
 
     @Override
-    protected String convert(byte[] payload) {
-        String converted = super.convert(payload);
-        if (converted.getBytes().length > (maxPayloadSize * 1024)) {
-            addWarn(format("Logging event '%s' exceeds the maximum size of %dkB", converted, maxPayloadSize));
+    protected P convert(byte[] payload) {
+        if (payload != null && payload.length > (maxPayloadSize * 1024)) {
+            addWarn(format("Logging event exceeded the maximum size of %dkB", maxPayloadSize));
             return null;
         } else {
-            return converted;
+            return super.convert(payload);
         }
     }
-
 }

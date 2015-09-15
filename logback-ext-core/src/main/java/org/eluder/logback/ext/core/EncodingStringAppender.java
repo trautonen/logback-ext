@@ -31,7 +31,6 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
-import com.google.common.io.BaseEncoding;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,13 +39,14 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.String.format;
 
-public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBase<E> {
+public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppenderBase<E> {
     
     protected final ReentrantLock lock = new ReentrantLock(true);
 
     private Charset charset = Charset.forName("UTF-8");
     private boolean binary = false;
     private Encoder<E> encoder;
+    private PayloadConverter<P> converter;
 
     public final void setCharset(Charset charset) {
         if (encoder instanceof LayoutWrappingEncoder) {
@@ -76,6 +76,10 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
         setEncoder(enc);
     }
 
+    public final void setConverter(PayloadConverter<P> converter) {
+        this.converter = converter;
+    }
+
     @Override
     public void setContext(Context context) {
         if (encoder != null) {
@@ -100,6 +104,10 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
     public void start() {
         if (encoder == null) {
             addError(format("Encoder not set for appender '%s'", getName()));
+            return;
+        }
+        if (converter == null) {
+            addError(format("Converter not set for appender '%s'", getName()));
             return;
         }
         lock.lock();
@@ -145,17 +153,13 @@ public abstract class EncodingStringAppender<E> extends UnsynchronizedAppenderBa
         }
     }
 
-    protected abstract void handle(E event, String encoded) throws Exception;
-    
-    protected String convert(byte[] payload) {
-        if (binary) {
-            return BaseEncoding.base64().encode(payload);
-        } else {
-            return new String(payload, charset);
-        }
+    protected abstract void handle(E event, P encoded) throws Exception;
+
+    protected P convert(byte[] payload) {
+        return converter.convert(payload);
     }
 
-    protected void doHandle(E event, String encoded) {
+    protected void doHandle(E event, P encoded) {
         try {
             if (encoded != null) {
                 handle(event, encoded);

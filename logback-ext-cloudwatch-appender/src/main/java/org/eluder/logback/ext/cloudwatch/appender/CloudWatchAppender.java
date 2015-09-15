@@ -14,13 +14,14 @@ import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.core.AppenderExecutors;
+import org.eluder.logback.ext.core.StringPayloadConverter;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.String.format;
 
-public class CloudWatchAppender extends AbstractAwsEncodingStringAppender {
+public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String> {
 
     private final ReentrantLock tokenLock = new ReentrantLock(true);
 
@@ -50,6 +51,12 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender {
 
     public final void setLogStream(String logStream) {
         this.logStream = logStream;
+    }
+
+    @Override
+    public void start() {
+        setConverter(new StringPayloadConverter(getCharset(), isBinary()));
+        super.start();
     }
 
     @Override
