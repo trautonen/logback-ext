@@ -158,9 +158,9 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
         try {
             disruptor.shutdown(0, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
-            addWarn(format("Disruptor for appender %s did not shut down in %d milliseconds, " +
+            addWarn(format("Disruptor did not shut down in %d milliseconds, " +
                            "logging events might have been discarded",
-                           getName(), maxFlushTime));
+                           maxFlushTime));
         }
     }
 
