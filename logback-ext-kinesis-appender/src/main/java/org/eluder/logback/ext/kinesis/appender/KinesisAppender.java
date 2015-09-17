@@ -5,6 +5,7 @@ import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.amazonaws.services.kinesis.model.PutRecordResult;
+import com.amazonaws.util.StringUtils;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.core.AppenderExecutors;
@@ -13,6 +14,8 @@ import org.eluder.logback.ext.core.ByteArrayPayloadConverter;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+
+import static java.lang.String.format;
 
 public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
 
@@ -31,6 +34,14 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
 
     @Override
     public void start() {
+        if (RegionUtils.getRegion(region) == null) {
+            addError(format("Region not set or invalid for appender '%s'", getName()));
+            return;
+        }
+        if (StringUtils.isNullOrEmpty(stream)) {
+            addError(format("Stream not set for appender '%s", getName()));
+            return;
+        }
         setConverter(new ByteArrayPayloadConverter());
         super.start();
     }
@@ -61,8 +72,9 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
                 .withPartitionKey(getPartitionKey(event))
                 .withStreamName(stream)
                 .withData(buffer);
+        String errorMessage = format("Appender '%s' failed to send logging event '%s' to Kinesis stream '%s'", getName(), event, stream);
         CountDownLatch latch = new CountDownLatch(isAsyncParent() ? 0 : 1);
-        kinesis.putRecordAsync(request, new LoggingEventHandler<PutRecordRequest, PutRecordResult>(this, latch, "foo"));
+        kinesis.putRecordAsync(request, new LoggingEventHandler<PutRecordRequest, PutRecordResult>(this, latch, errorMessage));
         AppenderExecutors.awaitLatch(this, latch, getMaxFlushTime());
     }
 
