@@ -3,7 +3,6 @@ package org.eluder.logback.ext.lmax.appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.ContextAware;
 import ch.qos.logback.core.spi.DeferredProcessingAware;
-import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventTranslatorOneArg;
 import com.lmax.disruptor.ExceptionHandler;
@@ -30,60 +29,64 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
     private static final int DEFAULT_THREAD_POOL_SIZE = 1;
     private static final int DEFAULT_BUFFER_SIZE = 8192;
 
-    private EventFactory<LogEvent<E>> eventFactory = new LogEventFactory<E>();
-    private EventTranslatorOneArg<LogEvent<E>, E> eventTranslator = new LogEventTranslator<E>();
-    private ExceptionHandler<LogEvent<E>> exceptionHandler = new LogExceptionHandler<E>(this);
-    private WorkHandler<LogEvent<E>> eventHandler;
+    private EventFactory<LogEvent<E>> eventFactory = new LogEventFactory<>();
+    private EventTranslatorOneArg<LogEvent<E>, E> eventTranslator = new LogEventTranslator<>();
+    private ExceptionHandler<LogEvent<E>> exceptionHandler = new LogExceptionHandler<>(this);
+    private WorkHandler<LogEvent<E>> workHandler;
 
     private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private int bufferSize = DEFAULT_BUFFER_SIZE;
     private int maxFlushTime = AppenderExecutors.DEFAULT_MAX_FLUSH_TIME;
     private ProducerType producerType = ProducerType.MULTI;
-    private WaitStrategy waitStrategy = new BlockingWaitStrategy();
+    private WaitStrategy waitStrategy = WaitStrategyFactory.DEFAULT_WAIT_STRATEGY;
 
     private Disruptor<LogEvent<E>> disruptor;
     private ExecutorService executor;
 
-    public void setEventFactory(EventFactory<LogEvent<E>> eventFactory) {
+    public final void setEventFactory(EventFactory<LogEvent<E>> eventFactory) {
         this.eventFactory = eventFactory;
     }
 
-    public void setEventTranslator(EventTranslatorOneArg<LogEvent<E>, E> eventTranslator) {
+    public final void setEventTranslator(EventTranslatorOneArg<LogEvent<E>, E> eventTranslator) {
         this.eventTranslator = eventTranslator;
     }
 
-    public void setExceptionHandler(ExceptionHandler<LogEvent<E>> exceptionHandler) {
+    public final void setExceptionHandler(ExceptionHandler<LogEvent<E>> exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
     }
 
-    public void setEventHandler(WorkHandler<LogEvent<E>> eventHandler) {
-        this.eventHandler = eventHandler;
+    public final void setWorkHandler(WorkHandler<LogEvent<E>> workHandler) {
+        this.workHandler = workHandler;
     }
 
-    public void setThreadPoolSize(int threadPoolSize) {
+    public final void setThreadPoolSize(int threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
     }
 
-    public void setBufferSize(int bufferSize) {
+    public final void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
     }
 
-    public void setMaxFlushTime(int maxFlushTime) {
+    public final void setMaxFlushTime(int maxFlushTime) {
         this.maxFlushTime = maxFlushTime;
     }
 
-    public void setProducerType(ProducerType producerType) {
+    public final void setProducerType(ProducerType producerType) {
         this.producerType = producerType;
     }
 
-    public void setWaitStrategy(WaitStrategy waitStrategy) {
+    public final void setWaitStrategy(WaitStrategy waitStrategy) {
         this.waitStrategy = waitStrategy;
+    }
+
+    public final void setWaitStrategyType(String waitStrategyType) {
+        setWaitStrategy(WaitStrategyFactory.createFromType(waitStrategyType));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void start() {
-        if (eventHandler == null) {
+        if (workHandler == null) {
             addError(format("Event handler not set for appender '%s'", getName()));
             return;
         }
@@ -93,7 +96,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
                 return;
             }
             executor = AppenderExecutors.newExecutor(this, threadPoolSize);
-            disruptor = new Disruptor<LogEvent<E>>(
+            disruptor = new Disruptor<>(
                     eventFactory,
                     bufferSize,
                     executor,
@@ -136,7 +139,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
 
     @SuppressWarnings("unchecked")
     private WorkHandler<LogEvent<E>>[] createWorkers() {
-        WorkHandler<LogEvent<E>> handler = new ClearingWorkHandler<E>(eventHandler);
+        WorkHandler<LogEvent<E>> handler = new ClearingWorkHandler<>(workHandler);
         WorkHandler<LogEvent<E>>[] workers = new WorkHandler[threadPoolSize];
         for (int i = 0; i < threadPoolSize; i++) {
             workers[i] = handler;
@@ -176,7 +179,7 @@ public class DisruptorAppender<E extends DeferredProcessingAware> extends Unsync
     protected static class LogEventFactory<E> implements EventFactory<LogEvent<E>> {
         @Override
         public LogEvent<E> newInstance() {
-            return new LogEvent<E>();
+            return new LogEvent<>();
         }
     }
 

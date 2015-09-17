@@ -6,11 +6,11 @@ public class LoggingEventDisruptorAppender extends DelegatingDisruptorAppender<I
 
     private boolean includeCallerData = false;
 
-    public boolean isIncludeCallerData() {
+    public final boolean isIncludeCallerData() {
         return includeCallerData;
     }
 
-    public void setIncludeCallerData(boolean includeCallerData) {
+    public final void setIncludeCallerData(boolean includeCallerData) {
         this.includeCallerData = includeCallerData;
     }
 

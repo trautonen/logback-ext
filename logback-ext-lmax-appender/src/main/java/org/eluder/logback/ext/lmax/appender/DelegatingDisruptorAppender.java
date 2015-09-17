@@ -14,7 +14,7 @@ public class DelegatingDisruptorAppender<E extends DeferredProcessingAware> exte
     private final AppenderAttachableImpl<E> appenders = new AppenderAttachableImpl<E>();
 
     public DelegatingDisruptorAppender() {
-        setEventHandler(new AppendersWorkHandler());
+        setWorkHandler(new AppendersWorkHandler());
     }
 
     @Override
