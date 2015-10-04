@@ -4,23 +4,17 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.logs.AWSLogsClient;
-import com.amazonaws.services.logs.model.DataAlreadyAcceptedException;
-import com.amazonaws.services.logs.model.InputLogEvent;
-import com.amazonaws.services.logs.model.InvalidSequenceTokenException;
-import com.amazonaws.services.logs.model.PutLogEventsRequest;
-import com.amazonaws.services.logs.model.PutLogEventsResult;
+import com.amazonaws.services.logs.model.*;
 import com.amazonaws.util.StringUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Queues;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.core.StringPayloadConverter;
 
-import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -28,14 +22,16 @@ import static java.lang.String.format;
 
 public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String> {
 
-    private static final int DEFAULT_MAX_BATCH_SIZE = 500;
+    private static final int DEFAULT_MAX_BATCH_SIZE = 512;
     private static final int DEFAULT_MAX_BATCH_TIME = 1000;
+    private static final int DEFAULT_INTERNAL_QUEUE_SIZE = 8192;
 
     private String region;
     private String logGroup;
     private String logStream;
     private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
     private long maxBatchTime = DEFAULT_MAX_BATCH_TIME;
+    private int internalQueueSize = DEFAULT_INTERNAL_QUEUE_SIZE;
 
     private AWSLogsClient logs;
 
@@ -70,6 +66,10 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
         this.maxBatchTime = maxBatchTime;
     }
 
+    public final void setInternalQueueSize(int internalQueueSize) {
+        this.internalQueueSize = internalQueueSize;
+    }
+
     @Override
     public void start() {
         if (RegionUtils.getRegion(region) == null) {
@@ -95,7 +95,13 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
                 getClientConfiguration()
         );
         logs.setRegion(RegionUtils.getRegion(region));
-        queue = new LinkedBlockingQueue<InputLogEvent>();
+        if (!logGroupExists(logGroup)) {
+            createLogGroup(logGroup);
+        }
+        if (!logStreamExists(logGroup, logStream)) {
+            createLogStream(logGroup, logStream);
+        }
+        queue = new LinkedBlockingQueue<>(internalQueueSize);
         worker = new Worker(this);
         worker.setName(format("%s-worker", getName()));
         worker.setDaemon(true);
@@ -131,19 +137,54 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
     @Override
     protected void handle(final ILoggingEvent event, final String encoded) throws Exception {
         InputLogEvent ile = new InputLogEvent().withTimestamp(event.getTimeStamp()).withMessage(encoded);
-        if (!queue.offer(ile)) {
-            addWarn("Logging event discarded because queue was full");
+        if (!queue.offer(ile, getMaxFlushTime(), TimeUnit.MILLISECONDS)) {
+            addWarn(format("No space available in internal queue after %d ms waiting, logging event was discarded",
+                           getMaxFlushTime()));
         }
+    }
+
+    protected boolean logGroupExists(String logGroup) {
+        DescribeLogGroupsRequest request = new DescribeLogGroupsRequest().withLogGroupNamePrefix(logGroup);
+        DescribeLogGroupsResult result = logs.describeLogGroups(request);
+        for (LogGroup group : result.getLogGroups()) {
+            if (logGroup.equals(group.getLogGroupName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void createLogGroup(String logGroup) {
+        CreateLogGroupRequest request = new CreateLogGroupRequest(logGroup);
+        logs.createLogGroup(request);
+        addInfo(format("Successfully created log group '%s'", logGroup));
+    }
+
+    protected boolean logStreamExists(String logGroup, String logStream) {
+        DescribeLogStreamsRequest request = new DescribeLogStreamsRequest().withLogGroupName(logGroup).withLogStreamNamePrefix(logStream);
+        DescribeLogStreamsResult result = logs.describeLogStreams(request);
+        for (LogStream stream : result.getLogStreams()) {
+            if (logStream.equals(stream.getLogStreamName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void createLogStream(String logGroup, String logStream) {
+        CreateLogStreamRequest request = new CreateLogStreamRequest(logGroup, logStream);
+        logs.createLogStream(request);
+        addInfo(format("Successfully created log stream '%s' for group '%s'", logStream, logGroup));
     }
 
     private static class Worker extends Thread {
 
-        private static final Comparator<InputLogEvent> COMPARATOR = new Comparator<InputLogEvent>() {
+        private static final Ordering<InputLogEvent> ORDERING = new Ordering<InputLogEvent>() {
             @Override
-            public int compare(InputLogEvent o1, InputLogEvent o2) {
-                if (o1.getTimestamp() < o2.getTimestamp()) {
+            public int compare(InputLogEvent left, InputLogEvent right) {
+                if (left.getTimestamp() < right.getTimestamp()) {
                     return -1;
-                } else if (o1.getTimestamp() > o2.getTimestamp()) {
+                } else if (left.getTimestamp() > right.getTimestamp()) {
                     return 1;
                 } else {
                     return 0;
@@ -164,18 +205,18 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
         public void run() {
             started = true;
             while (started) {
-                SortedSet<InputLogEvent> events = new TreeSet<InputLogEvent>(COMPARATOR);
+                List<InputLogEvent> events = new LinkedList<>();
                 try {
                     Queues.drain(parent.queue, events, parent.maxBatchSize, parent.maxBatchTime, TimeUnit.MILLISECONDS);
-                    handle(ImmutableList.copyOf(events));
+                    handle(events);
                 } catch (InterruptedException ex) {
-                    handle(ImmutableList.copyOf(events));
+                    handle(events);
                 }
             }
 
-            SortedSet<InputLogEvent> remaining = new TreeSet<InputLogEvent>(COMPARATOR);
+            List<InputLogEvent> remaining = new LinkedList<>();
             parent.queue.drainTo(remaining);
-            for (List<InputLogEvent> batch : Lists.partition(ImmutableList.copyOf(remaining), parent.maxBatchSize)) {
+            for (List<InputLogEvent> batch : Lists.partition(remaining, parent.maxBatchSize)) {
                 handle(batch);
             }
 
@@ -187,13 +228,12 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
 
         private void handle(List<InputLogEvent> events) {
             if (!events.isEmpty()) {
-                PutLogEventsRequest request = new PutLogEventsRequest(parent.logGroup, parent.logStream, events);
+                List<InputLogEvent> sorted = ORDERING.immutableSortedCopy(events);
+                PutLogEventsRequest request = new PutLogEventsRequest(parent.logGroup, parent.logStream, sorted);
                 try {
                     try {
                         putEvents(request);
-                    } catch (DataAlreadyAcceptedException ex) {
-                        putEvents(request);
-                    } catch (InvalidSequenceTokenException ex) {
+                    } catch (DataAlreadyAcceptedException | InvalidSequenceTokenException ex) {
                         putEvents(request);
                     }
                 } catch (Exception ex) {
