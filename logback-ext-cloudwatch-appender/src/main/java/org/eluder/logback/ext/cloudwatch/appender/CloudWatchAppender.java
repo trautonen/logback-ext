@@ -25,6 +25,7 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
     private static final int DEFAULT_MAX_BATCH_SIZE = 512;
     private static final int DEFAULT_MAX_BATCH_TIME = 1000;
     private static final int DEFAULT_INTERNAL_QUEUE_SIZE = 8192;
+    private static final boolean DEFAULT_SKIP_CREATE = false;
 
     private String region;
     private String logGroup;
@@ -32,6 +33,7 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
     private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
     private long maxBatchTime = DEFAULT_MAX_BATCH_TIME;
     private int internalQueueSize = DEFAULT_INTERNAL_QUEUE_SIZE;
+    private boolean skipCreate = DEFAULT_SKIP_CREATE;
 
     private AWSLogsClient logs;
 
@@ -70,6 +72,10 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
         this.internalQueueSize = internalQueueSize;
     }
 
+    public final void setSkipCreate(boolean skipCreate) {
+        this.skipCreate = skipCreate;
+    }
+
     @Override
     public void start() {
         if (RegionUtils.getRegion(region) == null) {
@@ -95,11 +101,13 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
                 getClientConfiguration()
         );
         logs.setRegion(RegionUtils.getRegion(region));
-        if (!logGroupExists(logGroup)) {
-            createLogGroup(logGroup);
-        }
-        if (!logStreamExists(logGroup, logStream)) {
-            createLogStream(logGroup, logStream);
+        if (skipCreate) {
+            if (!logGroupExists(logGroup)) {
+                createLogGroup(logGroup);
+            }
+            if (!logStreamExists(logGroup, logStream)) {
+                createLogStream(logGroup, logStream);
+            }
         }
         queue = new LinkedBlockingQueue<>(internalQueueSize);
         worker = new Worker(this);
