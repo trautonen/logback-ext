@@ -11,7 +11,7 @@ import java.util.Iterator;
 
 public class DelegatingDisruptorAppender<E extends DeferredProcessingAware> extends DisruptorAppender<E> implements AppenderAttachable<E> {
 
-    private final AppenderAttachableImpl<E> appenders = new AppenderAttachableImpl<E>();
+    private final AppenderAttachableImpl<E> appenders = new AppenderAttachableImpl<>();
 
     public DelegatingDisruptorAppender() {
         setWorkHandler(new AppendersWorkHandler());
