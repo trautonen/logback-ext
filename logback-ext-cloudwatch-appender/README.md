@@ -40,6 +40,8 @@ actions more, use `skipCreate` property as `true` and create the group and strea
 
 Complete list of the appender properties.
 
+| Property | Type | Description |
+| -------- | ---- | ----------- |
 | `region` | *string* | AWS region. |
 | `logGroup` | *string* | Log group name. |
 | `logStream` | *string* | Log stream name. |
