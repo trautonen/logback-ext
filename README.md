@@ -21,15 +21,15 @@ or Java API.
 
 All modules belong to group `org.eluder.logback`. See each module for specific documentation.
 
-* [logback-ext-core](logback-ext-core/)
-* [logback-ext-aws-core](logback-ext-aws-core/)
-* [logback-ext-jackson](logback-ext-jackson/)
-* [logback-ext-lmax-appender](logback-ext-lmax-appender/)
-* [logback-ext-cloudwatch-appender](logback-ext-cloudwatch-appender/)
-* [logback-ext-dynamodb-appender](logback-ext-dynamodb-appender/)
-* [logback-ext-kinesis-appender](logback-ext-kinesis-appender/)
-* [logback-ext-sns-appender](logback-ext-sns-appender/)
-* [logback-ext-sqs-appender](logback-ext-sqs-appender/)
+* Extensions core module: [logback-ext-core](logback-ext-core/)
+* AWS core module: [logback-ext-aws-core](logback-ext-aws-core/)
+* Jackson JSON encoder: [logback-ext-jackson](logback-ext-jackson/)
+* LMAX Disruptor appender: [logback-ext-lmax-appender](logback-ext-lmax-appender/)
+* CloudWatch appender: [logback-ext-cloudwatch-appender](logback-ext-cloudwatch-appender/)
+* DynamoDB appender: [logback-ext-dynamodb-appender](logback-ext-dynamodb-appender/)
+* Kinesis appender: [logback-ext-kinesis-appender](logback-ext-kinesis-appender/)
+* SNS appender: [logback-ext-sns-appender](logback-ext-sns-appender/)
+* SQS appender: [logback-ext-sqs-appender](logback-ext-sqs-appender/)
 
 
 ### AWS Authentication
