@@ -101,7 +101,7 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
                 getClientConfiguration()
         );
         logs.setRegion(RegionUtils.getRegion(region));
-        if (skipCreate) {
+        if (!skipCreate) {
             if (!logGroupExists(logGroup)) {
                 createLogGroup(logGroup);
             }
