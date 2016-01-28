@@ -1,26 +1,40 @@
 package org.eluder.logback.ext.cloudwatch.appender;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.filter.Filter;
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.logs.AWSLogsClient;
-import com.amazonaws.services.logs.model.*;
-import com.amazonaws.util.StringUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Queues;
-import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
-import org.eluder.logback.ext.aws.core.AwsSupport;
-import org.eluder.logback.ext.core.StringPayloadConverter;
+import static java.lang.String.format;
 
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.String.format;
+import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.aws.core.AwsSupport;
+import org.eluder.logback.ext.core.StringPayloadConverter;
 
-public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String> {
+import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.services.logs.AWSLogsClient;
+import com.amazonaws.services.logs.model.CreateLogGroupRequest;
+import com.amazonaws.services.logs.model.CreateLogStreamRequest;
+import com.amazonaws.services.logs.model.DataAlreadyAcceptedException;
+import com.amazonaws.services.logs.model.DescribeLogGroupsRequest;
+import com.amazonaws.services.logs.model.DescribeLogGroupsResult;
+import com.amazonaws.services.logs.model.DescribeLogStreamsRequest;
+import com.amazonaws.services.logs.model.DescribeLogStreamsResult;
+import com.amazonaws.services.logs.model.InputLogEvent;
+import com.amazonaws.services.logs.model.InvalidSequenceTokenException;
+import com.amazonaws.services.logs.model.LogGroup;
+import com.amazonaws.services.logs.model.LogStream;
+import com.amazonaws.services.logs.model.PutLogEventsRequest;
+import com.amazonaws.services.logs.model.PutLogEventsResult;
+import com.amazonaws.util.StringUtils;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Queues;
+
+import ch.qos.logback.core.filter.Filter;
+
+public class CloudWatchAppender<E> extends AbstractAwsEncodingStringAppender<E, String> {
 
     private static final int DEFAULT_MAX_BATCH_SIZE = 512;
     private static final int DEFAULT_MAX_BATCH_TIME = 1000;
@@ -44,7 +58,7 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
         super();
     }
 
-    protected CloudWatchAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+    protected CloudWatchAppender(AwsSupport awsSupport, Filter<E> sdkLoggingFilter) {
         super(awsSupport, sdkLoggingFilter);
     }
 
@@ -143,8 +157,12 @@ public class CloudWatchAppender extends AbstractAwsEncodingStringAppender<String
     }
 
     @Override
-    protected void handle(final ILoggingEvent event, final String encoded) throws Exception {
-        InputLogEvent ile = new InputLogEvent().withTimestamp(event.getTimeStamp()).withMessage(encoded);
+    protected void handle(final E event, final String encoded) throws Exception {
+    	// use introspection to get the timestamp
+    	Method method = event.getClass().getMethod("getTimeStamp");
+    	Long timestamp = (Long)method.invoke(event);
+    	// create the CloudWatch log event
+        InputLogEvent ile = new InputLogEvent().withTimestamp(timestamp).withMessage(encoded);
         if (!queue.offer(ile, getMaxFlushTime(), TimeUnit.MILLISECONDS)) {
             addWarn(format("No space available in internal queue after %d ms waiting, logging event was discarded",
                            getMaxFlushTime()));

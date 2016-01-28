@@ -1,23 +1,23 @@
 package org.eluder.logback.ext.kinesis.appender;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
-import com.amazonaws.services.kinesis.model.PutRecordRequest;
-import com.amazonaws.services.kinesis.model.PutRecordResult;
-import com.amazonaws.util.StringUtils;
-import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
-import org.eluder.logback.ext.aws.core.LoggingEventHandler;
-import org.eluder.logback.ext.core.AppenderExecutors;
-import org.eluder.logback.ext.core.ByteArrayPayloadConverter;
+import static java.lang.String.format;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
-import static java.lang.String.format;
+import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.aws.core.LoggingEventHandler;
+import org.eluder.logback.ext.core.AppenderExecutors;
+import org.eluder.logback.ext.core.ByteArrayPayloadConverter;
 
-public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
+import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
+import com.amazonaws.services.kinesis.model.PutRecordRequest;
+import com.amazonaws.services.kinesis.model.PutRecordResult;
+import com.amazonaws.util.StringUtils;
+
+public class KinesisAppender<E> extends AbstractAwsEncodingStringAppender<E, byte[]> {
 
     private String region;
     private String stream;
@@ -66,7 +66,7 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
     }
 
     @Override
-    protected void handle(ILoggingEvent event, byte[] encoded) throws Exception {
+    protected void handle(E event, byte[] encoded) throws Exception {
         ByteBuffer buffer = ByteBuffer.wrap(encoded);
         PutRecordRequest request = new PutRecordRequest()
                 .withPartitionKey(getPartitionKey(event))
@@ -78,7 +78,7 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
         AppenderExecutors.awaitLatch(this, latch, getMaxFlushTime());
     }
 
-    protected String getPartitionKey(ILoggingEvent event) {
+    protected String getPartitionKey(E event) {
         return UUID.randomUUID().toString();
     }
 }

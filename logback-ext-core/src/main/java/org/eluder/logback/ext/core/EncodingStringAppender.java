@@ -50,7 +50,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
 
     public final void setCharset(Charset charset) {
         if (encoder instanceof LayoutWrappingEncoder) {
-            ((LayoutWrappingEncoder) encoder).setCharset(charset);
+            ((LayoutWrappingEncoder<E>) encoder).setCharset(charset);
         } else if (encoder instanceof CharacterEncoder) {
             ((CharacterEncoder<?>) encoder).setCharset(charset);
         }

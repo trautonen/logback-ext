@@ -49,7 +49,7 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.lang.String.format;
 
-public class DynamoDbAppender extends AbstractAwsEncodingStringAppender<String> {
+public class DynamoDbAppender extends AbstractAwsEncodingStringAppender<ILoggingEvent, String> {
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     private static final String DEFAULT_PRIMARY_KEY = "Id";
