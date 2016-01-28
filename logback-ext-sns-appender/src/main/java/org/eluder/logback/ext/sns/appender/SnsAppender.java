@@ -2,7 +2,7 @@ package org.eluder.logback.ext.sns.appender;
 
 /*
  * #[license]
- * logback-ext-aws-sns-appender
+ * logback-ext-sns-appender
  * %%
  * Copyright (C) 2014 - 2015 Tapio Rautonen
  * %%

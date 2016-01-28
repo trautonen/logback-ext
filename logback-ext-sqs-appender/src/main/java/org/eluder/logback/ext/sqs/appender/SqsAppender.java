@@ -2,7 +2,7 @@ package org.eluder.logback.ext.sqs.appender;
 
 /*
  * #[license]
- * logback-ext-aws-appender
+ * logback-ext-sqs-appender
  * %%
  * Copyright (C) 2014 - 2015 Tapio Rautonen
  * %%
