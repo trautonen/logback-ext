@@ -48,6 +48,10 @@ public class AsyncSqsAppender extends AsyncAppender {
         this.appender = appender;
     }
 
+    public void setQueueUrl(String queueUrl) {
+        appender.setQueueUrl(queueUrl);
+    }
+
     public void setAccessKey(String accessKey) {
         appender.setAccessKey(accessKey);
     }
@@ -58,10 +62,6 @@ public class AsyncSqsAppender extends AsyncAppender {
 
     public void setMaxPayloadSize(int maxPayloadSize) {
         appender.setMaxPayloadSize(maxPayloadSize);
-    }
-
-    public void setQueueUrl(String queueUrl) {
-        appender.setQueueUrl(queueUrl);
     }
 
     public final void setThreadPoolSize(int threadPoolSize) {
