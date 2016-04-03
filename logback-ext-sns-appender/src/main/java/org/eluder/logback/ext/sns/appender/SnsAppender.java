@@ -26,25 +26,24 @@ package org.eluder.logback.ext.sns.appender;
  * %[license]
  */
 
-import static java.lang.String.format;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
+import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.services.sns.AmazonSNSAsyncClient;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.core.StringPayloadConverter;
 
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.services.sns.AmazonSNSAsyncClient;
-import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sns.model.PublishResult;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 
-import ch.qos.logback.core.filter.Filter;
+import static java.lang.String.format;
 
-public class SnsAppender<E> extends AbstractAwsEncodingStringAppender<E, String> {
+public class SnsAppender<E extends DeferredProcessingAware> extends AbstractAwsEncodingStringAppender<E, String> {
 
     private String region;
     private String topic;

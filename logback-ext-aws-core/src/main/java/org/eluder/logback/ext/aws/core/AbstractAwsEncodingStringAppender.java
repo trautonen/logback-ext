@@ -24,22 +24,20 @@ package org.eluder.logback.ext.aws.core;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN		
  * THE SOFTWARE.		
  * %[license]		
- */		
- 
-
-import static java.lang.String.format;
-
-import org.eluder.logback.ext.core.AppenderExecutors;
-import org.eluder.logback.ext.core.EncodingStringAppender;
-
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
+ */
 
 import ch.qos.logback.core.Context;
 import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import org.eluder.logback.ext.core.AppenderExecutors;
+import org.eluder.logback.ext.core.EncodingStringAppender;
 
-public abstract class AbstractAwsEncodingStringAppender<E, P> extends EncodingStringAppender<E, P> implements AWSCredentials {
+import static java.lang.String.format;
+
+public abstract class AbstractAwsEncodingStringAppender<E extends DeferredProcessingAware, P> extends EncodingStringAppender<E, P> implements AWSCredentials {
 
     protected final AwsSupport awsSupport;
     protected final Filter<E> sdkLoggingFilter;

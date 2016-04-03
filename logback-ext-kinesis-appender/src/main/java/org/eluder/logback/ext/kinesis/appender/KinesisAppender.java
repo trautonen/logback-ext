@@ -1,23 +1,23 @@
 package org.eluder.logback.ext.kinesis.appender;
 
-import static java.lang.String.format;
-
-import java.nio.ByteBuffer;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-
-import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
-import org.eluder.logback.ext.aws.core.LoggingEventHandler;
-import org.eluder.logback.ext.core.AppenderExecutors;
-import org.eluder.logback.ext.core.ByteArrayPayloadConverter;
-
+import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.amazonaws.services.kinesis.model.PutRecordResult;
 import com.amazonaws.util.StringUtils;
+import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
+import org.eluder.logback.ext.aws.core.LoggingEventHandler;
+import org.eluder.logback.ext.core.AppenderExecutors;
+import org.eluder.logback.ext.core.ByteArrayPayloadConverter;
 
-public class KinesisAppender<E> extends AbstractAwsEncodingStringAppender<E, byte[]> {
+import java.nio.ByteBuffer;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+
+import static java.lang.String.format;
+
+public class KinesisAppender<E extends DeferredProcessingAware> extends AbstractAwsEncodingStringAppender<E, byte[]> {
 
     private String region;
     private String stream;

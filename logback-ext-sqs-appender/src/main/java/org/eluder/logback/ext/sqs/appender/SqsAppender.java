@@ -26,26 +26,25 @@ package org.eluder.logback.ext.sqs.appender;
  * %[license]
  */
 
-import static java.lang.String.format;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
 import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.core.StringPayloadConverter;
 
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageResult;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 
-import ch.qos.logback.core.filter.Filter;
+import static java.lang.String.format;
 
-public class SqsAppender<E> extends AbstractAwsEncodingStringAppender<E, String> {
+public class SqsAppender<E extends DeferredProcessingAware> extends AbstractAwsEncodingStringAppender<E, String> {
 
     private String queueUrl;
 
@@ -91,10 +90,10 @@ public class SqsAppender<E> extends AbstractAwsEncodingStringAppender<E, String>
             sqs = null;
         }
     }
-    
+
     protected String getEndpoint() {
         try {
-            return new URI(queueUrl).getHost(); 
+            return new URI(queueUrl).getHost();
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("Malformed queue url", ex);
         }

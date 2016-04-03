@@ -32,21 +32,22 @@ import ch.qos.logback.core.spi.FilterReply;
 
 public class InternalSdkLoggingFilter<E> extends Filter<E> {
 
-	private static final String[] EXCLUDED_PACKAGES = { "org.apache.http.", "com.amazonaws." };
+    private static final String[] EXCLUDED_PACKAGES = { "org.apache.http.", "com.amazonaws." };
 
-	public InternalSdkLoggingFilter() {
-		setName("aws-internal-logging-exclude");
-	}
+    public InternalSdkLoggingFilter() {
+        setName("aws-internal-logging-exclude");
+    }
 
-	@Override
-	public FilterReply decide(E event) {
-		if (event instanceof ILoggingEvent) {
-			for (String exclude : EXCLUDED_PACKAGES) {
-				if (((ILoggingEvent) event).getLoggerName().startsWith(exclude)) {
-					return FilterReply.DENY;
-				}
-			}
-		}
-		return FilterReply.NEUTRAL;
-	}
+    @Override
+    public FilterReply decide(E event) {
+        if (event instanceof ILoggingEvent) {
+            String loggerName = ((ILoggingEvent) event).getLoggerName();
+            for (String exclude : EXCLUDED_PACKAGES) {
+                if (loggerName.startsWith(exclude)) {
+                    return FilterReply.DENY;
+                }
+            }
+        }
+        return FilterReply.NEUTRAL;
+    }
 }
