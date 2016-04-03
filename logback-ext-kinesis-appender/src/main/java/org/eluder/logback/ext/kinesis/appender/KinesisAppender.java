@@ -1,6 +1,6 @@
 package org.eluder.logback.ext.kinesis.appender;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClient;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
@@ -17,7 +17,7 @@ import java.util.concurrent.CountDownLatch;
 
 import static java.lang.String.format;
 
-public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
+public class KinesisAppender<E extends DeferredProcessingAware> extends AbstractAwsEncodingStringAppender<E, byte[]> {
 
     private String region;
     private String stream;
@@ -66,7 +66,7 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
     }
 
     @Override
-    protected void handle(ILoggingEvent event, byte[] encoded) throws Exception {
+    protected void handle(E event, byte[] encoded) throws Exception {
         ByteBuffer buffer = ByteBuffer.wrap(encoded);
         PutRecordRequest request = new PutRecordRequest()
                 .withPartitionKey(getPartitionKey(event))
@@ -78,7 +78,7 @@ public class KinesisAppender extends AbstractAwsEncodingStringAppender<byte[]> {
         AppenderExecutors.awaitLatch(this, latch, getMaxFlushTime());
     }
 
-    protected String getPartitionKey(ILoggingEvent event) {
+    protected String getPartitionKey(E event) {
         return UUID.randomUUID().toString();
     }
 }

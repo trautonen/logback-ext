@@ -10,13 +10,13 @@ import java.nio.charset.Charset;
 
 public class AsyncKinesisAppender extends AsyncAppender {
 
-    private final KinesisAppender appender;
+    private final KinesisAppender<ILoggingEvent> appender;
 
     public AsyncKinesisAppender() {
-        this(new KinesisAppender());
+        this(new KinesisAppender<ILoggingEvent>());
     }
 
-    protected AsyncKinesisAppender(KinesisAppender appender) {
+    protected AsyncKinesisAppender(KinesisAppender<ILoggingEvent> appender) {
         appender.setAsyncParent(true);
         addAppender(appender);
         this.appender = appender;

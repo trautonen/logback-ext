@@ -1,22 +1,22 @@
 package org.eluder.logback.ext.cloudwatch.appender;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.core.filter.Filter;
 import org.eluder.logback.ext.aws.core.AwsSupport;
 import org.eluder.logback.ext.core.CommonEventAttributes;
 
-public class CloudWatchAppender extends AbstractCloudWatchAppender<ILoggingEvent> {
+public class CloudWatchAccessAppender extends AbstractCloudWatchAppender<IAccessEvent> {
 
-    public CloudWatchAppender() {
+    public CloudWatchAccessAppender() {
         super();
     }
 
-    protected CloudWatchAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+    protected CloudWatchAccessAppender(AwsSupport awsSupport, Filter<IAccessEvent> sdkLoggingFilter) {
         super(awsSupport, sdkLoggingFilter);
     }
 
     @Override
-    protected CommonEventAttributes applyCommonEventAttributes(final ILoggingEvent event) {
+    protected CommonEventAttributes applyCommonEventAttributes(final IAccessEvent event) {
         return new CommonEventAttributes() {
             @Override
             public String getThreadName() {

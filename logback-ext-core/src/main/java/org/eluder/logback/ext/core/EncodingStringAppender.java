@@ -31,6 +31,7 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,8 +40,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.String.format;
 
-public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppenderBase<E> {
-    
+public abstract class EncodingStringAppender<E extends DeferredProcessingAware, P> extends UnsynchronizedAppenderBase<E> {
+
     protected final ReentrantLock lock = new ReentrantLock(true);
 
     private Charset charset = Charset.forName("UTF-8");
@@ -50,7 +51,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
 
     public final void setCharset(Charset charset) {
         if (encoder instanceof LayoutWrappingEncoder) {
-            ((LayoutWrappingEncoder) encoder).setCharset(charset);
+            ((LayoutWrappingEncoder<?>) encoder).setCharset(charset);
         } else if (encoder instanceof CharacterEncoder) {
             ((CharacterEncoder<?>) encoder).setCharset(charset);
         }
@@ -63,7 +64,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
         }
         this.binary = binary;
     }
-    
+
     public final void setEncoder(Encoder<E> encoder) {
         this.encoder = encoder;
         setContext(context);
@@ -71,7 +72,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
     }
 
     public final void setLayout(Layout<E> layout) {
-        LayoutWrappingEncoder<E> enc = new LayoutWrappingEncoder<E>();
+        LayoutWrappingEncoder<E> enc = new LayoutWrappingEncoder<>();
         enc.setLayout(layout);
         setEncoder(enc);
     }
@@ -169,7 +170,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
             addError(format("Failed to handle logging event for '%s'", getName()), ex);
         }
     }
-    
+
     protected void doEncode(E event) {
         try {
             encoder.doEncode(event);
@@ -178,7 +179,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
             addError(format("Failed to encode logging event for appender '%s'", getName()), ex);
         }
     }
-    
+
     protected void encoderInit(ByteArrayOutputStream stream) {
         try {
             encoder.init(stream);
@@ -187,7 +188,7 @@ public abstract class EncodingStringAppender<E, P> extends UnsynchronizedAppende
             addError(format("Failed to initialize encoder for appender '%s'", getName()), ex);
         }
     }
-    
+
     protected void encoderClose() {
         try {
             encoder.close();

@@ -12,10 +12,10 @@ package org.eluder.logback.ext.sqs.appender;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,8 +26,8 @@ package org.eluder.logback.ext.sqs.appender;
  * %[license]
  */
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
@@ -44,7 +44,7 @@ import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
-public class SqsAppender extends AbstractAwsEncodingStringAppender<String> {
+public class SqsAppender<E extends DeferredProcessingAware> extends AbstractAwsEncodingStringAppender<E, String> {
 
     private String queueUrl;
 
@@ -54,7 +54,7 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<String> {
         super();
     }
 
-    protected SqsAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+    protected SqsAppender(AwsSupport awsSupport, Filter<E> sdkLoggingFilter) {
         super(awsSupport, sdkLoggingFilter);
     }
 
@@ -90,17 +90,17 @@ public class SqsAppender extends AbstractAwsEncodingStringAppender<String> {
             sqs = null;
         }
     }
-    
+
     protected String getEndpoint() {
         try {
-            return new URI(queueUrl).getHost(); 
+            return new URI(queueUrl).getHost();
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("Malformed queue url", ex);
         }
     }
 
     @Override
-    protected void handle(final ILoggingEvent event, final String encoded) throws Exception {
+    protected void handle(final E event, final String encoded) throws Exception {
         SendMessageRequest request = new SendMessageRequest(queueUrl, encoded);
         String errorMessage = format("Appender '%s' failed to send logging event '%s' to SQS queue '%s'", getName(), event, queueUrl);
         CountDownLatch latch = new CountDownLatch(isAsyncParent() ? 0 : 1);

@@ -12,10 +12,10 @@ package org.eluder.logback.ext.sns.appender;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,16 +26,16 @@ package org.eluder.logback.ext.sns.appender;
  * %[license]
  */
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import org.eluder.logback.ext.aws.core.AbstractAwsEncodingStringAppender;
 import org.eluder.logback.ext.aws.core.AwsSupport;
-import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.aws.core.LoggingEventHandler;
+import org.eluder.logback.ext.core.AppenderExecutors;
 import org.eluder.logback.ext.core.StringPayloadConverter;
 
 import java.util.concurrent.CountDownLatch;
@@ -43,7 +43,7 @@ import java.util.concurrent.Executors;
 
 import static java.lang.String.format;
 
-public class SnsAppender extends AbstractAwsEncodingStringAppender<String> {
+public class SnsAppender<E extends DeferredProcessingAware> extends AbstractAwsEncodingStringAppender<E, String> {
 
     private String region;
     private String topic;
@@ -55,7 +55,7 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<String> {
         super();
     }
 
-    protected SnsAppender(AwsSupport awsSupport, Filter<ILoggingEvent> sdkLoggingFilter) {
+    protected SnsAppender(AwsSupport awsSupport, Filter<E> sdkLoggingFilter) {
         super(awsSupport, sdkLoggingFilter);
     }
 
@@ -97,7 +97,7 @@ public class SnsAppender extends AbstractAwsEncodingStringAppender<String> {
     }
 
     @Override
-    protected void handle(final ILoggingEvent event, final String encoded) throws Exception {
+    protected void handle(final E event, final String encoded) throws Exception {
         PublishRequest request = new PublishRequest(topic, encoded, subject);
         String errorMessage = format("Appender '%s' failed to send logging event '%s' to SNS topic '%s'", getName(), event, topic);
         CountDownLatch latch = new CountDownLatch(isAsyncParent() ? 0 : 1);

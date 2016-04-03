@@ -12,10 +12,10 @@ package org.eluder.logback.ext.aws.core;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,22 +30,22 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 
-public class InternalSdkLoggingFilter extends Filter<ILoggingEvent> {
+public class InternalSdkLoggingFilter<E> extends Filter<E> {
 
-    private static final String[] EXCLUDED_PACKAGES = {
-            "org.apache.http.",
-            "com.amazonaws."
-    };
+    private static final String[] EXCLUDED_PACKAGES = { "org.apache.http.", "com.amazonaws." };
 
     public InternalSdkLoggingFilter() {
         setName("aws-internal-logging-exclude");
     }
 
     @Override
-    public FilterReply decide(ILoggingEvent event) {
-        for (String exclude : EXCLUDED_PACKAGES) {
-            if (event.getLoggerName().startsWith(exclude)) {
-                return FilterReply.DENY;
+    public FilterReply decide(E event) {
+        if (event instanceof ILoggingEvent) {
+            String loggerName = ((ILoggingEvent) event).getLoggerName();
+            for (String exclude : EXCLUDED_PACKAGES) {
+                if (loggerName.startsWith(exclude)) {
+                    return FilterReply.DENY;
+                }
             }
         }
         return FilterReply.NEUTRAL;
