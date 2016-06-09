@@ -13,7 +13,7 @@
 
   <groupId>org.eluder.logback</groupId>
   <artifactId>logback-ext</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>logback-ext</name>
@@ -45,7 +45,7 @@
     <java.version>1.7</java.version>
     <guava.version>18.0</guava.version>
     <jackson.version>2.5.4</jackson.version>
-    <aws.version>1.10.2</aws.version>
+    <aws.version>1.11.5</aws.version>
     <lmax.version>3.3.2</lmax.version>
     <jmh.version>1.10.5</jmh.version>
   </properties>
