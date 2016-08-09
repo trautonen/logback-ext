@@ -7,7 +7,7 @@
   <parent>
     <artifactId>eluder-parent</artifactId>
     <groupId>org.eluder</groupId>
-    <version>8-SNAPSHOT</version>
+    <version>8</version>
     <relativePath></relativePath>
   </parent>
 
