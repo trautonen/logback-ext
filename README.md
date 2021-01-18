@@ -6,14 +6,14 @@ Logback Extensions
 
 Extensions for Logback logging library mainly for appenders aimed for Amazon Web Services,
 including CloudWatch Logs, DynamoDB, Kinesis, SNS and SQS appenders. Contains also high
-performance asynchronous appender based on LMAX disrupotr and some utilities like Jackson JSON
+performance asynchronous appender based on LMAX disruptor and some utilities like Jackson JSON
 encoder.
 
 
 ## Using Logback Extensions
 
 Logback Extensions requires Java 7 or newer. Include desired modules in your project's
-dependency management and configure the appenders or encoders using Logback's XML configutation
+dependency management and configure the appenders or encoders using Logback's XML configuration
 or Java API.
 
 
